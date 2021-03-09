@@ -1,6 +1,5 @@
-import glob, os
+import os
 import wget
-from tqdm import tqdm
 from . import log
 
 filenames = {

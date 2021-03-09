@@ -1,4 +1,5 @@
-import os, glob
+import os
+import glob
 import warnings
 
 import numpy as np
@@ -6,7 +7,6 @@ import pandas as pd
 import pickle
 from scipy import sparse
 import matplotlib.pyplot as plt
-from matplotlib import colors
 from tqdm import tqdm
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, match_coordinates_3d
@@ -335,14 +335,14 @@ class KeplerPSF(object):
         test_val = test_A.dot(w).reshape(test_r2.shape)
 
         # find radius where flux > cut
-        l = np.zeros(len(test_f)) * np.nan
+        lr = np.zeros(len(test_f)) * np.nan
         for idx in range(len(test_f)):
             loc = np.where(10 ** test_val[idx] < cut)[0]
             if len(loc) > 0:
-                l[idx] = test_r[loc[0]]
+                lr[idx] = test_r[loc[0]]
 
-        ok = np.isfinite(l)
-        polifit_results = np.polyfit(test_f[ok], l[ok], 2)
+        ok = np.isfinite(lr)
+        polifit_results = np.polyfit(test_f[ok], lr[ok], 2)
         source_radius_limit = np.polyval(polifit_results, np.log10(gf))
         source_radius_limit[source_radius_limit > radius_limit] = radius_limit
         source_radius_limit[source_radius_limit < 0] = 0
@@ -374,7 +374,7 @@ class KeplerPSF(object):
                 cmap="viridis",
                 shading="auto",
             )
-            line = np.polyval(np.polyfit(test_f[ok], l[ok], 2), test_f)
+            line = np.polyval(np.polyfit(test_f[ok], lr[ok], 2), test_f)
             line[line > radius_limit] = radius_limit
             ax[1].plot(test_f, line, color="r", label="Mask threshold")
             ax[1].legend(frameon=True, loc="lower left")
