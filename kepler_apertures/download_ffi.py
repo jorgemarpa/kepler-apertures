@@ -1,8 +1,6 @@
 import os
 import wget
 
-# from . import log
-
 filenames = {
     10: ["kplr2011208112727_ffi-cal.fits", "kplr2011240181752_ffi-cal.fits"],
     11: ["kplr2011303191211_ffi-cal.fits", "kplr2011334181008_ffi-cal.fits"],
@@ -31,7 +29,7 @@ def download_ffi(quarter: int = 5):
     try:
         fnames = filenames[quarter]
     except KeyError:
-        log.error("Input Quarter not in FFI catalog")
+        raise KeyError("Input Quarter not in FFI catalog")
 
     if not os.path.isdir("../data/fits/%s" % (str(quarter))):
         os.mkdir("../data/fits/%s" % (str(quarter)))
