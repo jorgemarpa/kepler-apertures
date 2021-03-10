@@ -4,3 +4,4 @@ data/
 kepler_apertures/__pycache__/
 docs/.virtual_documents
 docs/.ipynb_checkpoints
+docs/.jupyter_symlinks
