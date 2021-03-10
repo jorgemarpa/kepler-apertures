@@ -1,6 +1,7 @@
 import os
 import wget
-from . import log
+
+# from . import log
 
 filenames = {
     10: ["kplr2011208112727_ffi-cal.fits", "kplr2011240181752_ffi-cal.fits"],
