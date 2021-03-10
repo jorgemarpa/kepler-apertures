@@ -17,7 +17,8 @@ from photutils import Background2D, MedianBackground, BkgZoomInterpolator
 
 from .utils import get_gaia_sources, make_A, make_A_edges, solve_linear_model
 from .download_ffi import download_ffi
-from . import log
+
+# from . import log
 
 r_min, r_max = 20, 1044
 c_min, c_max = 12, 1112
@@ -34,7 +35,6 @@ class KeplerPSF(object):
 
         fnames = np.sort(glob.glob("../data/fits/%i/kplr*_ffi-cal.fits" % (quarter)))
         if len(fnames) == 0:
-            log.info("Downloading FFI fits files")
             print("Downloading FFI fits files")
             download_ffi(quarter=quarter)
             fnames = np.sort(
@@ -56,13 +56,6 @@ class KeplerPSF(object):
         rad = [np.hypot(ra - ra.mean(), dec - dec.mean()).max()]
 
         time = Time(self.hdr["TSTART"] + 2454833, format="jd")
-        log.info(
-            "Will query with this (ra, dec, radius, epoch): ",
-            ra_q,
-            dec_q,
-            rad,
-            time.jyear,
-        )
         print(
             "Will query with this (ra, dec, radius, epoch): ",
             ra_q,
@@ -71,7 +64,6 @@ class KeplerPSF(object):
             time.jyear,
         )
         if ra_q[0] > 360 or np.abs(dec_q[0]) > 90 or rad[0] > 5:
-            log.error("Query values are out of bound, please check WCS solution.")
             raise ValueError(
                 "Query values are out of bound, please check WCS solution."
             )
@@ -116,6 +108,10 @@ class KeplerPSF(object):
             dec = dec[non_sat_mask]
             flux = flux[non_sat_mask]
 
+        self.flux = flux
+        self.col = col
+        self.row = row
+
         # create dx, dy, gf, r, phi, vectors
         # gaia estimate flux values per pixel to be used as flux priors
         dx, dy, sparse_mask = [], [], []
@@ -132,10 +128,16 @@ class KeplerPSF(object):
         self.dx = sparse.vstack(dx, "csr")
         self.dy = sparse.vstack(dy, "csr")
         self.sparse_mask = sparse.vstack(sparse_mask, "csr")
+        self.sparse_mask.eliminate_zeros()
         del dx, dy, sparse_mask
 
         gf = clean_sources["phot_g_mean_flux"].values
         self.dflux = self.sparse_mask.multiply(flux).tocsr()
+
+        # eliminate leaked zero flux values in the sparse_mask
+        self.sparse_mask = self.dflux.astype(bool)
+        self.dx = self.sparse_mask.multiply(self.dx).tocsr()
+        self.dy = self.sparse_mask.multiply(self.dy).tocsr()
 
         # convertion to polar coordinates
         print("to polar coordinates...")
@@ -219,6 +221,15 @@ class KeplerPSF(object):
             (sources.phot_g_mean_flux > 1e3) & (sources.phot_g_mean_flux < 1e6)
         ].reset_index(drop=True)
 
+        # find sources inside the image with 10 pix of inward tolerance
+        inside = (
+            (sources.row > 10)
+            & (sources.row < 1014)
+            & (sources.col > 10)
+            & (sources.col < 1090)
+        )
+        sources = sources[inside].reset_index(drop=True)
+
         # find well separated sources
         s_coords = SkyCoord(sources.ra, sources.dec, unit=("deg"))
         midx, mdist = match_coordinates_3d(s_coords, s_coords, nthneighbor=2)[:2]
@@ -236,15 +247,6 @@ class KeplerPSF(object):
         del s_coords, midx, mdist, closest, blocs, bmags
 
         sources = sources[~unresolved].reset_index(drop=True)
-
-        # find sources inside the image with 10 pix of inward tolerance
-        inside = (
-            (sources.row > 10)
-            & (sources.row < 1014)
-            & (sources.col > 10)
-            & (sources.col < 1090)
-        )
-        sources = sources[inside].reset_index(drop=True)
 
         return sources
 
@@ -394,7 +396,7 @@ class KeplerPSF(object):
                 os.mkdir("../data/figures/%s" % (str(self.quarter)))
 
             plt.savefig(fig_name, format="png", bbox_inches="tight")
-            plt.clf()
+            plt.close()
 
         return source_radius_limit
 
@@ -533,6 +535,6 @@ class KeplerPSF(object):
             )
 
             plt.savefig(fig_name, format="png", bbox_inches="tight")
-            plt.clf()
+            plt.close()
 
         return mean_model
