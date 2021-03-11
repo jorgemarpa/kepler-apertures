@@ -164,7 +164,7 @@ class KeplerPSF(object):
 
         # compute PSF model
         print("Computing PSF model...")
-        self.psf_model = self._build_psf_model(
+        self.psf_data = self._build_psf_model(
             self.r, self.phi, self.dflux, gf, radius * 2, self.dx, self.dy
         )
 
@@ -400,7 +400,9 @@ class KeplerPSF(object):
 
         return source_radius_limit
 
-    def _build_psf_model(self, r, phi, mean_flux, flux_estimates, radius, dx, dy):
+    def _build_psf_model(
+        self, r, phi, mean_flux, flux_estimates, radius, dx, dy, rknots=10, phiknots=12
+    ):
         warnings.filterwarnings("ignore", category=sparse.SparseEfficiencyWarning)
         warnings.filterwarnings("ignore", category=RuntimeWarning)
 
@@ -430,13 +432,13 @@ class KeplerPSF(object):
         r_b = source_mask.multiply(r).data
 
         # build a design matrix A with b-splines basis in radius and angle axis.
-        A = make_A(phi_b.ravel(), r_b.ravel())
+        A = make_A(phi_b.ravel(), r_b.ravel(), rknots=rknots, phiknots=phiknots)
         prior_sigma = np.ones(A.shape[1]) * 100
         prior_mu = np.zeros(A.shape[1])
         nan_mask = np.isfinite(mean_f.ravel())
 
         # we solve for A * psf_w = mean_f
-        for count in [0, 1]:
+        for count in [0, 1, 2]:
             psf_w = solve_linear_model(
                 A,
                 mean_f.ravel(),
@@ -454,21 +456,23 @@ class KeplerPSF(object):
         mean_model.eliminate_zeros()
         mean_model = mean_model.multiply(1 / mean_model.sum(axis=1))
 
+        psf_data = dict(
+            psf_w=psf_w,
+            A=A,
+            x_data=source_mask.multiply(dx).data,
+            y_data=source_mask.multiply(dy).data,
+            f_data=10 ** mean_f,
+            f_model=m,
+            clip_mask=nan_mask,
+        )
+
         if self.save:
-            to_save = dict(
-                psf_w=psf_w,
-                A=A,
-                x_data=source_mask.multiply(dx).data,
-                y_data=source_mask.multiply(dy).data,
-                f_data=mean_f,
-                f_model=m,
-            )
             output = "../data/models/%i/channel_%i_psf_model.pkl" % (
                 self.quarter,
                 self.channel,
             )
             with open(output, "wb") as file:
-                pickle.dump(to_save, file)
+                pickle.dump(psf_data, file)
 
         if self.plot:
             # Plotting r,phi,meanflux used to build PSF model
@@ -517,7 +521,7 @@ class KeplerPSF(object):
             ax[1, 0].set_ylabel("dy")
             ax[1, 0].set_xlabel("dx")
 
-            cax = cax = ax[1, 1].scatter(
+            cax = ax[1, 1].scatter(
                 source_mask.multiply(dx).data[nan_mask],
                 source_mask.multiply(dy).data[nan_mask],
                 c=np.log10(m)[nan_mask],
@@ -533,8 +537,7 @@ class KeplerPSF(object):
                 self.quarter,
                 self.channel,
             )
-
             plt.savefig(fig_name, format="png", bbox_inches="tight")
             plt.close()
 
-        return mean_model
+        return psf_data

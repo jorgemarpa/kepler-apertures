@@ -173,18 +173,18 @@ def solve_linear_model(A, y, y_err=None, prior_mu=None, prior_sigma=None, k=None
     return w
 
 
-def make_A(phi, r, cut_r=5):
+def make_A(phi, r, cut_r=5, phiknots=12, rknots=10):
     """
     Make spline design matrix in polar coordinates
     """
-    phi_spline = sparse.csr_matrix(wrapped_spline(phi, order=3, nknots=12).T)
+    phi_spline = sparse.csr_matrix(wrapped_spline(phi, order=3, nknots=phiknots).T)
     if r.max() > 4.0:
         upp_knot = 4.0
     elif r.max() > 3.0:
         upp_knot = 3.0
     else:
         upp_knot = np.percentile(r, 98)
-    r_knots = np.linspace(0.125 ** 0.5, 3.5 ** 0.5, 10) ** 2
+    r_knots = np.linspace(0.125 ** 0.5, 3.5 ** 0.5, rknots) ** 2
     r_spline = sparse.csr_matrix(
         np.asarray(
             dmatrix(
