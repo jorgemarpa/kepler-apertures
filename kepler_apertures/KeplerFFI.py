@@ -604,11 +604,11 @@ class KeplerPSF(object):
         if ax is None:
             fig, ax = plt.subplots(1, figsize=(10, 10))
         ax.scatter(
-            self.col_2d.ravel()[self.non_sat_mask][~self.bright_mask],
-            self.row_2d.ravel()[self.non_sat_mask][~self.bright_mask],
+            self.col_2d.ravel()[~self.non_sat_mask],
+            self.row_2d.ravel()[~self.non_sat_mask],
             c="r",
             marker=".",
-            label="bright",
+            label="sat",
         )
         ax.legend(loc="best")
 
