@@ -24,6 +24,7 @@ from .download_ffi import download_ffi
 r_min, r_max = 20, 1044
 c_min, c_max = 12, 1112
 remove_sat = True
+mask_bright = True
 
 
 class KeplerPSF(object):
@@ -36,6 +37,7 @@ class KeplerPSF(object):
         self.plot = plot
         self.save = save
         self.show = False
+
         fnames = np.sort(glob.glob("../data/fits/%i/kplr*_ffi-cal.fits" % (quarter)))
         if len(fnames) == 0:
             print("Downloading FFI fits files")
@@ -81,7 +83,7 @@ class KeplerPSF(object):
 
         # clean out-of-ccd and blended sources
         clean_sources = self._clean_source_list(sources)
-        self.sources = clean_sources
+        del sources
 
         # remove useless Pixels
         self.col_2d = col_2d[r_min:r_max, c_min:c_max] - c_min
@@ -113,13 +115,34 @@ class KeplerPSF(object):
             dec = dec[non_sat_mask]
             flux = flux[non_sat_mask]
 
+        if mask_bright:
+            bright_mask = ~self._mask_bright_sources(
+                flux, col, row, clean_sources, mag_limit=10
+            )
+            print("Bright pixels %i" % (np.sum(~bright_mask)))
+            self.bright_mask = bright_mask
+
+            col = col[bright_mask]
+            row = row[bright_mask]
+            ra = ra[bright_mask]
+            dec = dec[bright_mask]
+            flux = flux[bright_mask]
+
+        clean_sources = clean_sources[
+            (clean_sources.phot_g_mean_flux > 1e3)
+            & (clean_sources.phot_g_mean_flux < 1e6)
+        ].reset_index(drop=True)
+
+        print("Total Gaia sources %i" % (clean_sources.shape[0]))
+
+        self.sources = clean_sources
         self.flux = flux
         self.col = col
         self.row = row
 
         # self._create_sparse()
 
-        # compute PSF edge model
+        # # compute PSF edge model
         # print("Computing PSF edges...")
         # radius = self._find_psf_edge(
         #     self.r, self.dflux, self.gf, radius_limit=6.0, cut=200, dm_type="cubic"
@@ -129,6 +152,7 @@ class KeplerPSF(object):
         # print("Computing PSF model...")
         # self.psf_data = self._build_psf_model(
         #     self.r, self.phi, self.dflux, self.gf, radius * 2, self.dx, self.dy
+        #     rknots=4, phiknots=12
         # )
 
     def _do_query(self, ra_q, dec_q, rad, epoch):
@@ -178,11 +202,7 @@ class KeplerPSF(object):
 
     def _clean_source_list(self, sources):
 
-        print("Cleaning sources table:")
-        # remove bright/faint objects
-        sources = sources[
-            (sources.phot_g_mean_flux > 1e3) & (sources.phot_g_mean_flux < 1e6)
-        ].reset_index(drop=True)
+        print("Cleaning sources table...")
 
         # find sources inside the image with 10 pix of inward tolerance
         inside = (
@@ -257,6 +277,19 @@ class KeplerPSF(object):
         for p in bad_pixels:
             m |= (column == p[0]) & (row == p[1])
         return m
+
+    def _mask_bright_sources(self, flux, column, row, sources, mag_limit=10):
+        """Finds and removes halos produced by bright stars (<10 mag)"""
+        bright_mask = sources["phot_g_mean_mag"] <= mag_limit
+        mask_radius = 30  # Pixels
+
+        mask = [
+            np.hypot(column - s.col, row - s.row) < mask_radius
+            for _, s in sources[bright_mask].iterrows()
+        ]
+        mask = np.array(mask).sum(axis=0) > 0
+
+        return mask
 
     def _create_sparse(self):
         # create dx, dy, gf, r, phi, vectors
@@ -445,7 +478,9 @@ class KeplerPSF(object):
         r_b = source_mask.multiply(r).data
 
         # build a design matrix A with b-splines basis in radius and angle axis.
-        A = make_A(phi_b.ravel(), r_b.ravel(), rknots=rknots, phiknots=phiknots)
+        A = make_A(
+            phi_b.ravel(), r_b.ravel(), cut_r=5, rknots=rknots, phiknots=phiknots
+        )
         prior_sigma = np.ones(A.shape[1]) * 100
         prior_mu = np.zeros(A.shape[1])
         nan_mask = np.isfinite(mean_f.ravel())
@@ -604,11 +639,18 @@ class KeplerPSF(object):
         if ax is None:
             fig, ax = plt.subplots(1, figsize=(10, 10))
         ax.scatter(
-            self.col_2d.ravel()[~self.non_sat_mask],
-            self.row_2d.ravel()[~self.non_sat_mask],
+            self.col_2d.ravel()[self.non_sat_mask][~self.bright_mask],
+            self.row_2d.ravel()[self.non_sat_mask][~self.bright_mask],
             c="r",
             marker=".",
-            label="sat",
+            label="bright",
+        )
+        ax.scatter(
+            self.col_2d.ravel()[~self.non_sat_mask],
+            self.row_2d.ravel()[~self.non_sat_mask],
+            c="y",
+            marker=".",
+            label="saturated",
         )
         ax.legend(loc="best")
 

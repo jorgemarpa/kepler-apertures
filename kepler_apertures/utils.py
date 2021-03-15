@@ -106,7 +106,7 @@ def make_A_edges(r, f, type="quadratic"):
     elif type == "inverse":
         A = np.vstack([r ** 0, 1 / r, f]).T
     else:
-        print("Wrong desing matrix basis type")
+        raise ValueError("Wrong desing matrix basis type")
     return A
 
 
