@@ -567,6 +567,8 @@ class KeplerPSF(object):
                 vmax=vmax,
             )
             fig.colorbar(cax, ax=ax[1, 0])
+            # ax[1, 0].axvline(0, c="r", ls="-", lw=1, alpha=0.3)
+            # ax[1, 0].axhline(0, c="r", ls="-", lw=1, alpha=0.3)
             ax[1, 0].set_ylabel("dy")
             ax[1, 0].set_xlabel("dx")
 
@@ -580,6 +582,8 @@ class KeplerPSF(object):
                 vmax=vmax,
             )
             fig.colorbar(cax, ax=ax[1, 1])
+            # ax[1, 1].axvline(0, c="r", ls="-", lw=1, alpha=0.3)
+            # ax[1, 1].axhline(0, c="r", ls="-", lw=1, alpha=0.3)
             ax[1, 1].set_xlabel("dx")
 
             if self.save:
