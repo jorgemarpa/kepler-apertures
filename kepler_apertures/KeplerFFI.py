@@ -23,8 +23,8 @@ from .download_ffi import download_ffi
 
 r_min, r_max = 20, 1044
 c_min, c_max = 12, 1112
-remove_sat = False
-mask_bright = False
+remove_sat = True
+mask_bright = True
 
 
 class KeplerPSF(object):
