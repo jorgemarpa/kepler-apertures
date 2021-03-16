@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pickle
 from scipy import sparse
+from scipy.optimize import minimize_scalar
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from tqdm import tqdm
@@ -19,7 +20,6 @@ from photutils import Background2D, MedianBackground, BkgZoomInterpolator
 from .utils import get_gaia_sources, make_A, make_A_edges, solve_linear_model
 from .download_ffi import download_ffi
 
-# from . import log
 
 r_min, r_max = 20, 1044
 c_min, c_max = 12, 1112
@@ -28,6 +28,212 @@ mask_bright = True
 
 
 class KeplerPSF(object):
+    def __init__(self, DM, PSF_w, x_data=None, y_data=None, f_data=None, f_model=None):
+
+        self.DM = DM
+        self.PSF_w = PSF_w
+
+        if x_data is not None and y_data is not None and f_data is not None:
+            self.x_data = x_data
+            self.y_data = y_data
+            self.f_data = f_data  # in log
+
+            self.r_data = np.hypot(x_data, y_data)
+            self.phy_data = np.arctan2(y_data, x_data)
+
+            self.f_model = self.DM.dot(self.PSF_w)  # in log
+
+    def evaluate_PSF(self, flux, dx, dy):
+        r = np.hypot(dx, dy)
+        phi = np.arctan2(dy, dx)
+
+        dm = make_A(r.ravel(), phi.ravel())
+
+        mean_model = sparse.csr_matrix(r.shape)
+        m = 10 ** dm.dot(self.PSF_w)
+        mean_model[source_mask] = m
+        mean_model.eliminate_zeros()
+        psf_models = mean_model.multiply(1 / mean_model.sum(axis=1)).tocsr()
+
+        return psf_models
+
+    def find_aperture(
+        self, psf_models, idx=0, target_complet=0.9, target_crowd=0.9, plot=False
+    ):
+
+        compl, crowd, cut = [], [], []
+        for p in range(0, 99, 2):
+            cut.append(p)
+            mask = (psf_models[idx] > np.percentile(psf_models[idx].data, p)).toarray()[
+                0
+            ]
+            crowd.append(compute_CROWDSAP(psf_models, mask, idx))
+            compl.append(compute_FLFRCSAP(psf_models[idx].toarray()[0], mask))
+        compl = np.array(compl)
+        crowd = np.array(crowd)
+        cut = np.array(cut)
+
+        if plot:
+            plt.plot(cut, compl, label=r"FLFRCSAP      %.3f" % (compl_optim))
+            plt.plot(cut, crowd, label=r"CROWDSAP   %.3f" % (crowd_optim))
+            plt.axvline(p_optim, label=r"Optimal %%     %i" % (p_optim), c="r")
+            plt.xlabel("Percentile")
+            plt.ylabel("Metric")
+            plt.legend()
+            plt.show()
+        return aperture_mask
+
+    def optimize_aperture(
+        self, psf_models, idx=0, target_complet=0.9, target_crowd=0.9, max_iter=100
+    ):
+        optim_params = {
+            "percentile_bounds": [0, 99],
+            "target_complet": target_complet,
+            "target_crowd": target_crowd,
+            "max_iter": max_iter,
+            "psf_models": psf_models,
+            "idx": idx,
+        }
+        minimize_result = minimize_scalar(
+            self._goodness_metric_obj_fun,
+            method="Bounded",
+            bounds=alpha_bounds,
+            options={"maxiter": max_iter, "disp": False},
+            args=(optim_params),
+        )
+
+    def _goodness_metric_obj_fun(self, percentile, optim_params):
+        """The objective function to minimize with
+        scipy.optimize.minimize_scalar
+        First sets the alpha regularization penalty then runs
+        RegressionCorrector.correct and then computes the over- and
+        under-fitting goodness metrics to return a scalar penalty term to
+        minimize.
+        Uses the paramaters in self.optimization_params.
+        """
+        psf_models = optim_params["psf_models"]
+        idx = optim_params["idx"]
+        # Find the value where to cut
+        cut = np.percentile(model_flux, percentile)
+        # create "isophot" mask with current cut
+        mask = (psf_models[idx] > cut).toarray()[0]
+
+        # Do not compute and ignore if target score < 0
+        if optim_params["target_complet"] > 0:
+            completMetric = compute_FLFRCSAP(psf_models[idx].toarray()[0], mask)
+        else:
+            completMetric = 1.0
+
+        # Do not compute and ignore if target score < 0
+        if optim_params["target_crowd"] > 0:
+            crowdMetric = compute_CROWDSAP(psf_models, mask, idx)
+        else:
+            crowdMetric = 1.0
+
+        # Once we hit the target we want to ease-back on increasing the metric
+        # However, we don't want to ease-back to zero pressure, that will
+        # unconstrain the penalty term and cause the optmizer to run wild.
+        # So, use a "Leaky ReLU"
+        # metric' = threshold + (metric - threshold) * leakFactor
+        leakFactor = 0.01
+        if (
+            optim_params["target_complet"] > 0
+            and completMetric >= optim_params["target_complet"]
+        ):
+            completMetric = optim_params["target_complet"] + leakFactor * (
+                completMetric - optim_params["target_complet"]
+            )
+
+        if (
+            optim_params["target_crowd"] > 0
+            and crowdMetric >= optim_params["target_crowd"]
+        ):
+            crowdMetric = optim_params["target_crowd"] + leakFactor * (
+                crowdMetric - optim_params["target_crowd"]
+            )
+
+        penalty = -(completMetric + crowdMetric)
+
+        return penalty
+
+    def plot_mean_PSF(self, ax=None):
+        if not hasattr(self, "x_data"):
+            raise AttributeError("Class doesn't have attributes to plot PSF model")
+
+        if ax is None:
+            fig, ax = plt.subplots(1, 2, figsize=(5, 5))
+        vmin = 1
+        vmax = -3
+        cax = ax[0].scatter(
+            self.x_data,
+            self.y_data,
+            c=self.f_data,
+            marker=".",
+            s=2,
+            vmin=vmin,
+            vmax=vmax,
+        )
+        fig.colorbar(cax, ax=ax[0])
+        ax[0].set_title("Data mean flux")
+        ax[0].set_ylabel("dy")
+        ax[0].set_xlabel("dx")
+
+        cax = ax[1].scatter(
+            self.x_data,
+            self.y_data,
+            c=self.f_model,
+            marker=".",
+            s=2,
+            vmin=vmin,
+            vmax=vmax,
+        )
+        fig.colorbar(cax, ax=ax[1])
+        ax[1].set_title("Average PSF Model")
+        ax[1].set_xlabel("dx")
+
+        return ax
+
+    @staticmethod
+    def compute_FLFRCSAP(psf_model, mask):
+        """
+        Compute fraction of target flux enclosed in the optimal aperture to total flux
+        for a given source (flux completeness).
+        Parameters
+        ----------
+        psf_model: numpy ndarray
+            Array with the PSF model for the target source
+        mask: boolean array
+            Array of boolean indicating the aperture for the target source
+        Returns
+        -------
+        FLFRCSAP: float
+            Completeness metric
+        """
+        return psf_model[mask].sum() / psf_model.sum()
+
+    @staticmethod
+    def compute_CROWDSAP(psf_models, mask, i):
+        """
+        Compute the ratio of target flux relative to flux from all sources within
+        the photometric aperture (i.e. 1 - Crowdeness).
+        Parameters
+        ----------
+        psf_models: numpy ndarray
+            Array with the PSF models for all targets in the cutout
+        mask: boolean array
+            Array of boolean indicating the aperture for the target source
+        i: int
+            Index of the target source in axis = 0 of psf_models
+        Returns
+        -------
+        CROWDSAP: float
+            Crowdeness metric
+        """
+        ratio = psf_models.multiply(1 / psf_models.sum(axis=0)).tocsr()[i].toarray()[0]
+        return ratio[mask].sum() / mask.sum()
+
+
+class KeplerFFI(object):
     def __init__(
         self, quarter: int = 5, channel: int = 1, plot: bool = True, save: bool = True
     ):
