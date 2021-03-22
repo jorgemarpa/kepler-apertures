@@ -9,6 +9,7 @@ from scipy import sparse
 from scipy.optimize import minimize_scalar
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+from matplotlib import patches
 from tqdm import tqdm
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, match_coordinates_3d
@@ -28,66 +29,95 @@ mask_bright = True
 
 
 class KeplerPSF(object):
-    def __init__(self, DM, PSF_w, x_data=None, y_data=None, f_data=None, f_model=None):
+    def __init__(self, quarter=5, channel=1):
 
-        self.DM = DM
-        self.PSF_w = PSF_w
+        # load PSF model
+        fname = output = "../data/models/%i/channel_%i_psf_model.pkl" % (
+            quarter,
+            channel,
+        )
+        if os.path.isfile(fname):
+            psf = pickle.load(open(fname, "rb"))
+        else:
+            raise FileNotFoundError("No PSF files")
+        # load PSF edge model
+        fname = output = "../data/models/%i/channel_%i_psf_edge_model_%s.pkl" % (
+            quarter,
+            channel,
+            "cubic",
+        )
+        if os.path.isfile(fname):
+            psf_edge = pickle.load(open(fname, "rb"))
+        else:
+            raise FileNotFoundError("No PSF edge file")
 
-        if x_data is not None and y_data is not None and f_data is not None:
-            self.x_data = x_data
-            self.y_data = y_data
-            self.f_data = f_data  # in log
+        self.DM = psf["A"][psf["clip_mask"]]
+        self.PSF_w = psf["psf_w"]
+        self.x_data = psf["x_data"][psf["clip_mask"]]
+        self.y_data = psf["y_data"][psf["clip_mask"]]
+        self.f_data = psf["f_data"][psf["clip_mask"]]  # in log
 
-            self.r_data = np.hypot(x_data, y_data)
-            self.phy_data = np.arctan2(y_data, x_data)
+        self.r_data = np.hypot(self.x_data, self.y_data)
+        self.phy_data = np.arctan2(self.y_data, self.x_data)
 
-            self.f_model = self.DM.dot(self.PSF_w)  # in log
+        self.f_model = self.DM.dot(self.PSF_w)  # in log
 
-    def evaluate_PSF(self, flux, dx, dy):
+        self.psf_edge_model = psf_edge["polifit_results"]
+
+    def evaluate_PSF(self, flux, dx, dy, gf, rknots=5, phiknots=15):
         r = np.hypot(dx, dy)
         phi = np.arctan2(dy, dx)
 
-        dm = make_A(r.ravel(), phi.ravel())
+        r_lim = np.polyval(self.psf_edge_model, np.log10(gf)) * 1.5
+        source_mask = r < 10.0  # r_lim[:, None]
+        psf_mask = r <= r_lim[:, None]
+
+        phi[phi >= np.pi] = np.pi - 1e-3
+
+        dm = make_A(
+            phi[source_mask].ravel(),
+            r[source_mask].ravel(),
+            rknots=rknots,
+            phiknots=phiknots,
+        )
 
         mean_model = sparse.csr_matrix(r.shape)
         m = 10 ** dm.dot(self.PSF_w)
         mean_model[source_mask] = m
+        mean_model = mean_model.multiply(psf_mask).tocsr()
         mean_model.eliminate_zeros()
         psf_models = mean_model.multiply(1 / mean_model.sum(axis=1)).tocsr()
 
-        return psf_models
+        return mean_model
 
-    def find_aperture(
-        self, psf_models, idx=0, target_complet=0.9, target_crowd=0.9, plot=False
-    ):
-
+    def diagnose_metrics(self, psf_models, idx=0, ax=None):
         compl, crowd, cut = [], [], []
         for p in range(0, 99, 2):
             cut.append(p)
             mask = (psf_models[idx] > np.percentile(psf_models[idx].data, p)).toarray()[
                 0
             ]
-            crowd.append(compute_CROWDSAP(psf_models, mask, idx))
-            compl.append(compute_FLFRCSAP(psf_models[idx].toarray()[0], mask))
+            crowd.append(self.compute_CROWDSAP(psf_models, mask, idx))
+            compl.append(self.compute_FLFRCSAP(psf_models[idx].toarray()[0], mask))
         compl = np.array(compl)
         crowd = np.array(crowd)
         cut = np.array(cut)
 
-        if plot:
-            plt.plot(cut, compl, label=r"FLFRCSAP      %.3f" % (compl_optim))
-            plt.plot(cut, crowd, label=r"CROWDSAP   %.3f" % (crowd_optim))
-            plt.axvline(p_optim, label=r"Optimal %%     %i" % (p_optim), c="r")
-            plt.xlabel("Percentile")
-            plt.ylabel("Metric")
-            plt.legend()
-            plt.show()
-        return aperture_mask
+        if ax is None:
+            fig, ax = plt.subplots(1)
+        ax.plot(cut, compl, label=r"FLFRCSAP")
+        ax.plot(cut, crowd, label=r"CROWDSAP")
+        ax.set_xlabel("Percentile")
+        ax.set_ylabel("Metric")
+        ax.legend()
+
+        return ax
 
     def optimize_aperture(
         self, psf_models, idx=0, target_complet=0.9, target_crowd=0.9, max_iter=100
     ):
         optim_params = {
-            "percentile_bounds": [0, 99],
+            "percentile_bounds": [5, 95],
             "target_complet": target_complet,
             "target_crowd": target_crowd,
             "max_iter": max_iter,
@@ -97,10 +127,21 @@ class KeplerPSF(object):
         minimize_result = minimize_scalar(
             self._goodness_metric_obj_fun,
             method="Bounded",
-            bounds=alpha_bounds,
+            bounds=[5, 95],
             options={"maxiter": max_iter, "disp": False},
             args=(optim_params),
         )
+        optim_p = minimize_result.x
+
+        # print("Optimize percentile %i" % optim_p)
+        mask = (
+            psf_models[idx] > np.percentile(psf_models[idx].data, optim_p)
+        ).toarray()[0]
+
+        # recompute metrics for optimal mask
+        complet = self.compute_FLFRCSAP(psf_models[idx].toarray()[0], mask)
+        crowd = self.compute_CROWDSAP(psf_models, mask, idx)
+        return mask, complet, crowd, optim_p
 
     def _goodness_metric_obj_fun(self, percentile, optim_params):
         """The objective function to minimize with
@@ -114,19 +155,19 @@ class KeplerPSF(object):
         psf_models = optim_params["psf_models"]
         idx = optim_params["idx"]
         # Find the value where to cut
-        cut = np.percentile(model_flux, percentile)
+        cut = np.percentile(psf_models[idx].data, int(percentile))
         # create "isophot" mask with current cut
         mask = (psf_models[idx] > cut).toarray()[0]
 
         # Do not compute and ignore if target score < 0
         if optim_params["target_complet"] > 0:
-            completMetric = compute_FLFRCSAP(psf_models[idx].toarray()[0], mask)
+            completMetric = self.compute_FLFRCSAP(psf_models[idx].toarray()[0], mask)
         else:
             completMetric = 1.0
 
         # Do not compute and ignore if target score < 0
         if optim_params["target_crowd"] > 0:
-            crowdMetric = compute_CROWDSAP(psf_models, mask, idx)
+            crowdMetric = self.compute_CROWDSAP(psf_models, mask, idx)
         else:
             crowdMetric = 1.0
 
@@ -140,7 +181,7 @@ class KeplerPSF(object):
             optim_params["target_complet"] > 0
             and completMetric >= optim_params["target_complet"]
         ):
-            completMetric = optim_params["target_complet"] + leakFactor * (
+            completMetric = optim_params["target_complet"] + 0.001 * (
                 completMetric - optim_params["target_complet"]
             )
 
@@ -148,11 +189,11 @@ class KeplerPSF(object):
             optim_params["target_crowd"] > 0
             and crowdMetric >= optim_params["target_crowd"]
         ):
-            crowdMetric = optim_params["target_crowd"] + leakFactor * (
+            crowdMetric = optim_params["target_crowd"] + 0.1 * (
                 crowdMetric - optim_params["target_crowd"]
             )
 
-        penalty = -(completMetric + crowdMetric)
+        penalty = -(completMetric + 10 * crowdMetric)
 
         return penalty
 
@@ -161,8 +202,8 @@ class KeplerPSF(object):
             raise AttributeError("Class doesn't have attributes to plot PSF model")
 
         if ax is None:
-            fig, ax = plt.subplots(1, 2, figsize=(5, 5))
-        vmin = 1
+            fig, ax = plt.subplots(1, 2, figsize=(8, 3))
+        vmin = -0.5
         vmax = -3
         cax = ax[0].scatter(
             self.x_data,
@@ -190,6 +231,45 @@ class KeplerPSF(object):
         fig.colorbar(cax, ax=ax[1])
         ax[1].set_title("Average PSF Model")
         ax[1].set_xlabel("dx")
+
+        return ax
+
+    def plot_aperture(self, flux, mask=None, ax=None, log=False):
+        if ax is None:
+            fig, ax = plt.subplots(1, figsize=(5, 5))
+
+        pc = ax.pcolor(
+            flux,
+            shading="auto",
+            norm=colors.SymLogNorm(linthresh=50, vmin=0, vmax=2000, base=10)
+            if log
+            else None,
+        )
+        plt.colorbar(pc, label="", fraction=0.038)
+        ax.set_aspect("equal", adjustable="box")
+        ax.set_title("PSF evaluation")
+        if mask is not None:
+            for i in range(flux.shape[0]):
+                for j in range(flux.shape[1]):
+                    if mask[i, j]:
+                        rect = patches.Rectangle(
+                            xy=(j, i),
+                            width=1,
+                            height=1,
+                            color="red",
+                            fill=False,
+                            hatch="//",
+                        )
+                        ax.add_patch(rect)
+            zoom = np.argwhere(mask == True)
+            ax.set_ylim(
+                np.maximum(0, zoom[0, 0] - 3),
+                np.minimum(zoom[-1, 0] + 3, flux.shape[0]),
+            )
+            ax.set_xlim(
+                np.maximum(0, zoom[0, -1] - 3),
+                np.minimum(zoom[-1, -1] + 3, flux.shape[1]),
+            )
 
         return ax
 
@@ -244,12 +324,14 @@ class KeplerFFI(object):
         self.save = save
         self.show = False
 
-        fnames = np.sort(glob.glob("../data/fits/%i/kplr*_ffi-cal.fits" % (quarter)))
+        fnames = np.sort(
+            glob.glob("../data/fits/ffi/%i/kplr*_ffi-cal.fits" % (quarter))
+        )
         if len(fnames) == 0:
             print("Downloading FFI fits files")
             download_ffi(quarter=quarter)
             fnames = np.sort(
-                glob.glob("../data/fits/%i/kplr*_ffi-cal.fits" % (quarter))
+                glob.glob("../data/fits/ffi/%i/kplr*_ffi-cal.fits" % (quarter))
             )
 
         self.hdr = fits.open(fnames[0])[channel].header
@@ -362,7 +444,7 @@ class KeplerFFI(object):
         # )
 
     def _do_query(self, ra_q, dec_q, rad, epoch):
-        file_name = "../data/catalogs/%i/channel_%i_gaia_xmatch.csv" % (
+        file_name = "../data/catalogs/ffi/%i/channel_%i_gaia_xmatch.csv" % (
             self.quarter,
             self.channel,
         )
@@ -401,9 +483,10 @@ class KeplerFFI(object):
                 "ra_gaia",
                 "dec_gaia",
             ]
-            if not os.path.isdir("../data/catalogs/%i" % (self.quarter)):
-                os.mkdir("../data/catalogs/%i" % (self.quarter))
-            sources.loc[:, columns].to_csv(file_name)
+            sources = sources.loc[:, columns]
+            if not os.path.isdir("../data/catalogs/ffi/%i" % (self.quarter)):
+                os.mkdir("../data/catalogs/ffi/%i" % (self.quarter))
+            sources.to_csv(file_name)
         return sources
 
     def _clean_source_list(self, sources):
@@ -598,6 +681,16 @@ class KeplerFFI(object):
         source_radius_limit[source_radius_limit > radius_limit] = radius_limit
         source_radius_limit[source_radius_limit < 0] = 0
 
+        if self.save:
+            to_save = dict(w=w, polifit_results=polifit_results)
+            output = "../data/models/%i/channel_%i_psf_edge_model_%s.pkl" % (
+                self.quarter,
+                self.channel,
+                dm_type,
+            )
+            with open(output, "wb") as file:
+                pickle.dump(to_save, file)
+
         if self.plot:
             fig, ax = plt.subplots(1, 2, figsize=(14, 5), facecolor="white")
 
@@ -715,8 +808,8 @@ class KeplerFFI(object):
             A=A,
             x_data=source_mask.multiply(dx).data,
             y_data=source_mask.multiply(dy).data,
-            f_data=10 ** mean_f,
-            f_model=m,
+            f_data=mean_f,
+            f_model=np.log10(m),
             clip_mask=nan_mask,
         )
 
@@ -804,9 +897,9 @@ class KeplerFFI(object):
 
         return psf_data
 
-    def plot_image(self, ax=None, overlay=False):
+    def plot_image(self, ax=None, sources=False):
         if ax is None:
-            fig, ax = plt.subplots(1, figsize=(15, 15))
+            fig, ax = plt.subplots(1, figsize=(10, 10))
         ax = plt.subplot(projection=self.wcs)
         im = ax.imshow(
             self.flux_2d,
@@ -814,15 +907,15 @@ class KeplerFFI(object):
             origin="lower",
             norm=colors.SymLogNorm(linthresh=200, vmin=0, vmax=2000, base=10),
         )
-        plt.colorbar(im, label=r"Flux ($e^{-}s^{-1}$)")
+        plt.colorbar(im, ax=ax, label=r"Flux ($e^{-}s^{-1}$)", fraction=0.042)
 
-        plt.title("FFI Ch %i" % (self.channel))
+        ax.set_title("FFI Ch %i" % (self.channel))
         ax.set_xlabel("R.A. [hh:mm]")
         ax.set_ylabel("Decl. [deg]")
         ax.grid(color="white", ls="solid")
         ax.set_aspect("equal", adjustable="box")
 
-        if overlay:
+        if sources:
             ax.scatter(
                 self.sources.col,
                 self.sources.row,
@@ -861,7 +954,7 @@ class KeplerFFI(object):
         ax.legend(loc="best")
 
         ax.set_xlabel("Column Pixel Number")
-        ax.set_xlabel("Row Pixel Number")
+        ax.set_ylabel("Row Pixel Number")
 
         if self.save:
             fig_name = "../data/figures/%i/channel_%i_ffi_pixel_mask.png" % (
