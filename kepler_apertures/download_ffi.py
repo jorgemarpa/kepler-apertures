@@ -31,10 +31,10 @@ def download_ffi(quarter: int = 5):
     except KeyError:
         raise KeyError("Input Quarter not in FFI catalog")
 
-    if not os.path.isdir("../data/fits/%s" % (str(quarter))):
+    if not os.path.isdir("../data/fits/ffi/%s" % (str(quarter))):
         os.mkdir("../data/fits/%s" % (str(quarter)))
     for i, fn in enumerate(fnames):
-        out = "../data/fits/%i/%s" % (quarter, fn)
+        out = "../data/fits/ffi/%i/%s" % (quarter, fn)
 
         wget.download("%s/%s" % (url, fn), out=out)
 
