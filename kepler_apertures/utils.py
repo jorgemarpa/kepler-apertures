@@ -184,7 +184,7 @@ def make_A(phi, r, cut_r=5, phiknots=12, rknots=10):
         up_knot = 3.0
     else:
         up_knot = np.percentile(r, 98)
-    r_knots = np.linspace(0.1 ** 0.5, up_knot ** 0.5, rknots) ** 2
+    r_knots = np.linspace(0.5 ** 0.5, 3.0 ** 0.5, rknots) ** 2
     r_spline = sparse.csr_matrix(
         np.asarray(
             dmatrix(
