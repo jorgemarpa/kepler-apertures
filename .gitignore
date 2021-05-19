@@ -5,3 +5,8 @@ kepler_apertures/__pycache__/
 docs/.virtual_documents
 docs/.ipynb_checkpoints
 docs/.jupyter_symlinks
+docs/*.txt
+docs/*.png
+docs/*.fits
+docs/*.csv
+kepler_apertures/*.lprof
