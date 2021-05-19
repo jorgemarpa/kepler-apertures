@@ -5,11 +5,18 @@ import functools
 
 from scipy import sparse
 from patsy import dmatrix
+from tqdm import tqdm
 import pyia
+from astroquery.gaia import Gaia  # GaiaClass, TapPlus
+import matplotlib.pyplot as plt
+
+from astropy import units
+from astropy.time import Time
+from astropy.timeseries import BoxLeastSquares
 
 
 @functools.lru_cache()
-def get_gaia_sources(ras, decs, rads, magnitude_limit=18, epoch=2020, gaia="dr2"):
+def get_gaia_sources(ras, decs, rads, magnitude_limit=18, epoch=2020, dr=2):
     """
     Will find gaia sources using a TAP query, accounting for proper motions.
 
@@ -20,10 +27,10 @@ def get_gaia_sources(ras, decs, rads, magnitude_limit=18, epoch=2020, gaia="dr2"
     ras : tuple
         Tuple with right ascension coordinates to be queried
         shape nsources
-    ras : tuple
+    decs : tuple
         Tuple with declination coordinates to be queried
         shape nsources
-    ras : tuple
+    rads : tuple
         Tuple with radius query
         shape nsources
     magnitude_limit : int
@@ -34,6 +41,16 @@ def get_gaia_sources(ras, decs, rads, magnitude_limit=18, epoch=2020, gaia="dr2"
     Pandas DatFrame with number of result sources (rows) and Gaia columns
 
     """
+    if not hasattr(ras, "__iter__"):
+        ras = [ras]
+    if not hasattr(decs, "__iter__"):
+        decs = [decs]
+    if not hasattr(rads, "__iter__"):
+        rads = [rads]
+
+    # Gaia = GaiaClass(TapPlus(url="http://gaia.ari.uni-heidelberg.de/tap"))
+    Gaia.login(user="jmarti06", password="Antares24.10")
+
     wheres = [
         f"""1=CONTAINS(
                   POINT('ICRS',ra,dec),
@@ -42,42 +59,64 @@ def get_gaia_sources(ras, decs, rads, magnitude_limit=18, epoch=2020, gaia="dr2"
     ]
 
     where = """\n\tOR """.join(wheres)
-    gd = pyia.GaiaData.from_query(
-        f"""SELECT solution_id, designation, source_id, random_index, ref_epoch,
-        coord1(prop) AS ra, ra_error, coord2(prop) AS dec, dec_error, parallax,
-        parallax_error, parallax_over_error, pmra, pmra_error, pmdec, pmdec_error,
-        ra_dec_corr, ra_parallax_corr, ra_pmra_corr, ra_pmdec_corr, dec_parallax_corr,
-        dec_pmra_corr, dec_pmdec_corr, parallax_pmra_corr, parallax_pmdec_corr,
-        pmra_pmdec_corr, astrometric_n_obs_al, astrometric_n_obs_ac,
-        astrometric_n_good_obs_al, astrometric_n_bad_obs_al, astrometric_gof_al,
-        astrometric_chi2_al, astrometric_excess_noise, astrometric_excess_noise_sig,
-        astrometric_params_solved, astrometric_primary_flag, astrometric_weight_al,
-        astrometric_pseudo_colour, astrometric_pseudo_colour_error,
-        mean_varpi_factor_al, astrometric_matched_observations,
-        visibility_periods_used, astrometric_sigma5d_max, frame_rotator_object_type,
-        matched_observations, duplicated_source, phot_g_n_obs, phot_g_mean_flux,
-        phot_g_mean_flux_error, phot_g_mean_flux_over_error, phot_g_mean_mag,
-        phot_bp_n_obs, phot_bp_mean_flux, phot_bp_mean_flux_error,
-        phot_bp_mean_flux_over_error, phot_bp_mean_mag, phot_rp_n_obs,
-        phot_rp_mean_flux, phot_rp_mean_flux_error, phot_rp_mean_flux_over_error,
-        phot_rp_mean_mag, phot_bp_rp_excess_factor, phot_proc_mode, bp_rp, bp_g, g_rp,
-        radial_velocity, radial_velocity_error, rv_nb_transits, rv_template_teff,
-        rv_template_logg, rv_template_fe_h, phot_variable_flag, l, b, ecl_lon, ecl_lat,
-        priam_flags, teff_val, teff_percentile_lower, teff_percentile_upper, a_g_val,
-        a_g_percentile_lower, a_g_percentile_upper, e_bp_min_rp_val,
-        e_bp_min_rp_percentile_lower, e_bp_min_rp_percentile_upper, flame_flags,
-        radius_val, radius_percentile_lower, radius_percentile_upper, lum_val,
-        lum_percentile_lower, lum_percentile_upper, datalink_url, epoch_photometry_url,
-        ra as ra_gaia, dec as dec_gaia FROM (
- SELECT *,
- EPOCH_PROP_POS(ra, dec, parallax, pmra, pmdec, 0, ref_epoch, {epoch}) AS prop
- FROM gaiadr2.gaia_source
- WHERE {where}
-)  AS subquery
-WHERE phot_g_mean_mag<={magnitude_limit}
+    if dr == 2:
+        # CH: We don't need a lot of these columns we could greatly reduce it
+        gd = pyia.GaiaData.from_query(
+            f"""SELECT solution_id, designation, source_id, random_index, ref_epoch,
+            coord1(prop) AS ra, ra_error, coord2(prop) AS dec, dec_error, parallax,
+            parallax_error, parallax_over_error, pmra, pmra_error, pmdec, pmdec_error,
+            ra_dec_corr, ra_parallax_corr, ra_pmra_corr, ra_pmdec_corr, dec_parallax_corr,
+            dec_pmra_corr, dec_pmdec_corr, parallax_pmra_corr, parallax_pmdec_corr,
+            pmra_pmdec_corr, astrometric_n_obs_al, astrometric_n_obs_ac,
+            astrometric_n_good_obs_al, astrometric_n_bad_obs_al, astrometric_gof_al,
+            astrometric_chi2_al, astrometric_excess_noise, astrometric_excess_noise_sig,
+            astrometric_params_solved, astrometric_primary_flag, astrometric_weight_al,
+            astrometric_pseudo_colour, astrometric_pseudo_colour_error,
+            mean_varpi_factor_al, astrometric_matched_observations,
+            visibility_periods_used, astrometric_sigma5d_max, frame_rotator_object_type,
+            matched_observations, duplicated_source, phot_g_n_obs, phot_g_mean_flux,
+            phot_g_mean_flux_error, phot_g_mean_flux_over_error, phot_g_mean_mag,
+            phot_bp_n_obs, phot_bp_mean_flux, phot_bp_mean_flux_error,
+            phot_bp_mean_flux_over_error, phot_bp_mean_mag, phot_rp_n_obs,
+            phot_rp_mean_flux, phot_rp_mean_flux_error, phot_rp_mean_flux_over_error,
+            phot_rp_mean_mag, phot_bp_rp_excess_factor, phot_proc_mode, bp_rp, bp_g, g_rp,
+            radial_velocity, radial_velocity_error, rv_nb_transits, rv_template_teff,
+            rv_template_logg, rv_template_fe_h, phot_variable_flag, l, b, ecl_lon, ecl_lat,
+            priam_flags, teff_val, teff_percentile_lower, teff_percentile_upper, a_g_val,
+            a_g_percentile_lower, a_g_percentile_upper, e_bp_min_rp_val,
+            e_bp_min_rp_percentile_lower, e_bp_min_rp_percentile_upper, flame_flags,
+            radius_val, radius_percentile_lower, radius_percentile_upper, lum_val,
+            lum_percentile_lower, lum_percentile_upper, datalink_url, epoch_photometry_url,
+            ra as ra_gaia, dec as dec_gaia FROM (
+     SELECT *,
+     EPOCH_PROP_POS(ra, dec, parallax, pmra, pmdec, 0, ref_epoch, {epoch}) AS prop
+     FROM gaiadr2.gaia_source
+     WHERE {where}
+    )  AS subquery
+    WHERE phot_g_mean_mag<={magnitude_limit}
 
-"""
-    )
+    """
+        )
+    elif dr == 3:
+        gd = pyia.GaiaData.from_query(
+            f"""SELECT designation,
+                    coord1(prop) AS ra, ra_error, coord2(prop) AS dec, dec_error, parallax,
+                    parallax_error, pmra, pmra_error, pmdec, pmdec_error, dr2_radial_velocity, dr2_radial_velocity_error,
+                    ruwe, phot_g_n_obs, phot_g_mean_flux,
+                    phot_g_mean_flux_error, phot_g_mean_mag,
+                    phot_bp_n_obs, phot_bp_mean_flux, phot_bp_mean_flux_error, phot_bp_mean_mag, phot_rp_n_obs,
+                    phot_rp_mean_flux, phot_rp_mean_flux_error,
+                    phot_rp_mean_mag FROM (
+             SELECT *,
+             EPOCH_PROP_POS(ra, dec, parallax, pmra, pmdec, 0, ref_epoch, {epoch}) AS prop
+             FROM gaiaedr3.gaia_source
+             WHERE {where}
+            )  AS subquery
+            WHERE phot_g_mean_mag<={magnitude_limit}
+            """
+        )
+    else:
+        raise ValueError("Please pass a valid data release")
     return gd.data.to_pandas()
 
 
@@ -93,11 +132,16 @@ def make_A_edges(r, f, type="quadratic"):
     f : numpy ndarray
         Array with flux values
     type: string
-        Type of basis for the design matrix, default is quadratic in radius
+        Type of basis for the design matrix, default is quadratic in both
+        radius and flux
+    Returns
+    -------
+    A : numpy ndarray
+        A design matrix
     """
     if type == "linear":
         A = np.vstack([r ** 0, r, f]).T
-    elif type == "quadratic":
+    elif type == "r-quadratic":
         A = np.vstack([r ** 0, r, r ** 2, f]).T
     elif type == "cubic":
         A = np.vstack([r ** 0, r, r ** 2, r ** 3, f]).T
@@ -105,12 +149,28 @@ def make_A_edges(r, f, type="quadratic"):
         A = np.vstack([r ** 0, np.exp(-r), f]).T
     elif type == "inverse":
         A = np.vstack([r ** 0, 1 / r, f]).T
+    elif type == "rf-quadratic":
+        A = np.vstack(
+            [
+                r ** 0,
+                r,
+                r ** 2,
+                r ** 0 * f,
+                r * f,
+                r ** 2 * f,
+                r ** 0 * f ** 2,
+                r * f ** 2,
+                r ** 2 * f ** 2,
+            ]
+        ).T
     else:
         raise ValueError("Wrong desing matrix basis type")
     return A
 
 
-def solve_linear_model(A, y, y_err=None, prior_mu=None, prior_sigma=None, k=None):
+def solve_linear_model(
+    A, y, y_err=None, prior_mu=None, prior_sigma=None, k=None, errors=False
+):
     """
     Solves a linear model with design matrix A and observations y:
         Aw = y
@@ -160,31 +220,51 @@ def solve_linear_model(A, y, y_err=None, prior_mu=None, prior_sigma=None, k=None
         sigma_w_inv = A[k].T.dot(A[k])
         B = A[k].T.dot(y[k])
 
-    if type(sigma_w_inv) == sparse.csr_matrix:
-        sigma_w_inv = sigma_w_inv.toarray()
-
     if prior_mu is not None and prior_sigma is not None:
         sigma_w_inv += np.diag(1 / prior_sigma ** 2)
         B += prior_mu / prior_sigma ** 2
+
+    if type(sigma_w_inv) == sparse.csr_matrix:
+        sigma_w_inv = sigma_w_inv.toarray()
+
+    if type(sigma_w_inv) == sparse.csc_matrix:
+        sigma_w_inv = sigma_w_inv.toarray()
+
+    if type(sigma_w_inv) == np.matrix:
+        sigma_w_inv = np.asarray(sigma_w_inv)
+
     w = np.linalg.solve(sigma_w_inv, B)
-    if y_err is not None:
+    if errors is True:
         w_err = np.linalg.inv(sigma_w_inv).diagonal() ** 0.5
         return w, w_err
     return w
 
 
-def make_A(phi, r, cut_r=5, phiknots=12, rknots=10):
+def _make_A_polar(phi, r, cut_r=6, rmin=1, rmax=5, n_r_knots=12, n_phi_knots=15):
     """
-    Make spline design matrix in polar coordinates
+    Makes a spline design matrix in polar coordinates
+    Parameters
+    ----------
+    phi : numpy ndarray
+    r : numpy ndarray
+    cut_r : int
+    rmin : float
+        Minimum radius value for the array of knots
+    rmax : float
+        Maximum radius value for the array of knots
+    n_r_knots : int
+        Number of knots to used for the radius axis
+    n_phi_knots : int
+        Number of knots to used for the angle axis
+    Returns
+    -------
+    x1 : sparse matrix
+        Design matrix in polar coordinates using spline as base functions
     """
-    phi_spline = sparse.csr_matrix(wrapped_spline(phi, order=3, nknots=phiknots).T)
-    if r.max() > 4.0:
-        up_knot = 4.0
-    elif r.max() > 3.0:
-        up_knot = 3.0
-    else:
-        up_knot = np.percentile(r, 98)
-    r_knots = np.linspace(0.5 ** 0.5, 3.0 ** 0.5, rknots) ** 2
+    # create the spline bases for radius and angle
+    phi_spline = sparse.csr_matrix(wrapped_spline(phi, order=3, nknots=n_phi_knots).T)
+    r_knots = np.linspace(rmin ** 0.5, rmax ** 0.5, n_r_knots) ** 2
+    cut_r_int = np.where(r_knots <= cut_r)[0].max()
     r_spline = sparse.csr_matrix(
         np.asarray(
             dmatrix(
@@ -193,14 +273,16 @@ def make_A(phi, r, cut_r=5, phiknots=12, rknots=10):
             )
         )
     )
+    # build full desing matrix
     X = sparse.hstack(
         [phi_spline.multiply(r_spline[:, idx]) for idx in range(r_spline.shape[1])],
         format="csr",
     )
-    cut = np.arange(phi_spline.shape[1] * 1, phi_spline.shape[1] * cut_r)
+    # find and remove the angle dependency for all basis for radius < 6
+    cut = np.arange(0, phi_spline.shape[1] * cut_r_int)
     a = list(set(np.arange(X.shape[1])) - set(cut))
     X1 = sparse.hstack(
-        [X[:, a], r_spline[:, 1:cut_r], sparse.csr_matrix(np.ones(X.shape[0])).T],
+        [X[:, a], r_spline[:, 1:cut_r_int], sparse.csr_matrix(np.ones(X.shape[0])).T],
         format="csr",
     )
     return X1
@@ -261,3 +343,96 @@ def wrapped_spline(input_vector, order=2, nknots=10):
     for idx in np.arange(-order, 0):
         folded_basis[idx, :] += np.copy(basis)[nt // 2 + idx, len(x) :]
     return folded_basis
+
+
+def _bootstrap_max(t, y, dy, pmin, pmax, ffac, random_seed, n_bootstrap=1000):
+    """Generate a sequence of bootstrap estimates of the max"""
+
+    rng = np.random.RandomState(random_seed)
+    power_max = []
+    for _ in range(n_bootstrap):
+        s = rng.randint(0, len(y), len(y))  # sample with replacement
+        bls_boot = BoxLeastSquares(t, y[s], dy[s])
+        result = bls_boot.autopower(
+            [0.05, 0.10, 0.15, 0.20, 0.25, 0.33],
+            minimum_period=pmin,
+            maximum_period=pmax,
+            frequency_factor=ffac,
+        )
+        power_max.append(result.power.max())
+
+    power_max = units.Quantity(power_max)
+    power_max.sort()
+
+    return power_max
+
+
+def fap_bootstrap(Z, pmin, pmax, ffac, t, y, dy, n_bootstraps=1000, random_seed=None):
+    """Bootstrap estimate of the false alarm probability"""
+    pmax = _bootstrap_max(t, y, dy, pmin, pmax, ffac, random_seed, n_bootstraps)
+
+    return 1 - np.searchsorted(pmax, Z) / len(pmax)
+
+
+def get_bls_periods(lcs, plot=False, n_boots=100):
+
+    search_period = np.arange(0, 25, 0.2)[1:]
+    period_best, period_fap, snr = [], [], []
+    pmin, pmax, ffac = 0.5, 20, 10
+
+    for lc in tqdm(lcs, desc="BLS search", leave=True):
+        lc = lc.remove_outliers(sigma_lower=1e10, sigma_upper=5)
+        periodogram = lc.to_periodogram(
+            method="bls",
+            minimum_period=pmin,
+            maximum_period=pmax,
+            frequency_factor=ffac,
+        )
+        best_fit_period = periodogram.period_at_max_power
+        power_snr = periodogram.snr[np.argmax(periodogram.power)]
+        period_best.append(best_fit_period)
+        snr.append(power_snr)
+        if n_boots > 0:
+            p_fap = fap_bootstrap(
+                periodogram.power.max(),
+                pmin,
+                pmax,
+                ffac,
+                lc.time,
+                lc.flux,
+                lc.flux_err,
+                n_bootstraps=n_boots,
+                random_seed=99,
+            )
+        else:
+            p_fap = np.nan
+        period_fap.append(np.nan)
+
+        if plot:
+            fig = plt.figure(figsize=(13, 9))
+
+            plt.subplots_adjust(wspace=0.25, hspace=0.25)
+
+            sub1 = fig.add_subplot(2, 2, 1)
+            sub1.axvline(
+                best_fit_period.value,
+                color="r",
+                linestyle="--",
+                label="Period : %.3f d \nsnr %.4f\nfap : %.3f"
+                % (best_fit_period.value, power_snr, p_fap),
+            )
+            periodogram.plot(ax=sub1)
+            sub1.legend()
+
+            sub2 = fig.add_subplot(2, 2, 2)
+            lc.fold(
+                period=best_fit_period,
+                epoch_time=periodogram.transit_time_at_max_power,
+            ).errorbar(ax=sub2, alpha=0.8)
+
+            sub3 = fig.add_subplot(2, 2, (3, 4))
+            lc.plot(ax=sub3)
+            periodogram.get_transit_model().plot(ax=sub3, color="r")
+            plt.show()
+
+    return units.Quantity(period_best), np.array(period_fap), np.array(snr)
