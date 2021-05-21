@@ -35,6 +35,10 @@ def get_gaia_sources(ras, decs, rads, magnitude_limit=18, epoch=2020, dr=2):
         shape nsources
     magnitude_limit : int
         Limiting magnitued for query
+    epoch : float
+        Year of the observation (Julian year) used for proper motion correction.
+    dr : int
+        Gaia Data Release to be used, DR2 or EDR3.
 
     Returns
     -------
@@ -100,11 +104,13 @@ def get_gaia_sources(ras, decs, rads, magnitude_limit=18, epoch=2020, dr=2):
     elif dr == 3:
         gd = pyia.GaiaData.from_query(
             f"""SELECT designation,
-                    coord1(prop) AS ra, ra_error, coord2(prop) AS dec, dec_error, parallax,
-                    parallax_error, pmra, pmra_error, pmdec, pmdec_error, dr2_radial_velocity, dr2_radial_velocity_error,
+                    coord1(prop) AS ra, ra_error, coord2(prop) AS dec, dec_error,
+                    parallax, parallax_error, pmra, pmra_error, pmdec, pmdec_error,
+                    dr2_radial_velocity, dr2_radial_velocity_error,
                     ruwe, phot_g_n_obs, phot_g_mean_flux,
                     phot_g_mean_flux_error, phot_g_mean_mag,
-                    phot_bp_n_obs, phot_bp_mean_flux, phot_bp_mean_flux_error, phot_bp_mean_mag, phot_rp_n_obs,
+                    phot_bp_n_obs, phot_bp_mean_flux, phot_bp_mean_flux_error,
+                    phot_bp_mean_mag, phot_rp_n_obs,
                     phot_rp_mean_flux, phot_rp_mean_flux_error,
                     phot_rp_mean_mag FROM (
              SELECT *,
@@ -343,96 +349,3 @@ def wrapped_spline(input_vector, order=2, nknots=10):
     for idx in np.arange(-order, 0):
         folded_basis[idx, :] += np.copy(basis)[nt // 2 + idx, len(x) :]
     return folded_basis
-
-
-def _bootstrap_max(t, y, dy, pmin, pmax, ffac, random_seed, n_bootstrap=1000):
-    """Generate a sequence of bootstrap estimates of the max"""
-
-    rng = np.random.RandomState(random_seed)
-    power_max = []
-    for _ in range(n_bootstrap):
-        s = rng.randint(0, len(y), len(y))  # sample with replacement
-        bls_boot = BoxLeastSquares(t, y[s], dy[s])
-        result = bls_boot.autopower(
-            [0.05, 0.10, 0.15, 0.20, 0.25, 0.33],
-            minimum_period=pmin,
-            maximum_period=pmax,
-            frequency_factor=ffac,
-        )
-        power_max.append(result.power.max())
-
-    power_max = units.Quantity(power_max)
-    power_max.sort()
-
-    return power_max
-
-
-def fap_bootstrap(Z, pmin, pmax, ffac, t, y, dy, n_bootstraps=1000, random_seed=None):
-    """Bootstrap estimate of the false alarm probability"""
-    pmax = _bootstrap_max(t, y, dy, pmin, pmax, ffac, random_seed, n_bootstraps)
-
-    return 1 - np.searchsorted(pmax, Z) / len(pmax)
-
-
-def get_bls_periods(lcs, plot=False, n_boots=100):
-
-    search_period = np.arange(0, 25, 0.2)[1:]
-    period_best, period_fap, snr = [], [], []
-    pmin, pmax, ffac = 0.5, 20, 10
-
-    for lc in tqdm(lcs, desc="BLS search", leave=True):
-        lc = lc.remove_outliers(sigma_lower=1e10, sigma_upper=5)
-        periodogram = lc.to_periodogram(
-            method="bls",
-            minimum_period=pmin,
-            maximum_period=pmax,
-            frequency_factor=ffac,
-        )
-        best_fit_period = periodogram.period_at_max_power
-        power_snr = periodogram.snr[np.argmax(periodogram.power)]
-        period_best.append(best_fit_period)
-        snr.append(power_snr)
-        if n_boots > 0:
-            p_fap = fap_bootstrap(
-                periodogram.power.max(),
-                pmin,
-                pmax,
-                ffac,
-                lc.time,
-                lc.flux,
-                lc.flux_err,
-                n_bootstraps=n_boots,
-                random_seed=99,
-            )
-        else:
-            p_fap = np.nan
-        period_fap.append(np.nan)
-
-        if plot:
-            fig = plt.figure(figsize=(13, 9))
-
-            plt.subplots_adjust(wspace=0.25, hspace=0.25)
-
-            sub1 = fig.add_subplot(2, 2, 1)
-            sub1.axvline(
-                best_fit_period.value,
-                color="r",
-                linestyle="--",
-                label="Period : %.3f d \nsnr %.4f\nfap : %.3f"
-                % (best_fit_period.value, power_snr, p_fap),
-            )
-            periodogram.plot(ax=sub1)
-            sub1.legend()
-
-            sub2 = fig.add_subplot(2, 2, 2)
-            lc.fold(
-                period=best_fit_period,
-                epoch_time=periodogram.transit_time_at_max_power,
-            ).errorbar(ax=sub2, alpha=0.8)
-
-            sub3 = fig.add_subplot(2, 2, (3, 4))
-            lc.plot(ax=sub3)
-            periodogram.get_transit_model().plot(ax=sub3, color="r")
-            plt.show()
-
-    return units.Quantity(period_best), np.array(period_fap), np.array(snr)

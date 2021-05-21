@@ -1,18 +1,20 @@
+"""
+Defines the KeplerFFI class that uses FFIs to model the PRF shape for a given
+channel and quarter.
+"""
 import os
 import sys
-import glob
 import warnings
 import wget
 
 import numpy as np
 import pandas as pd
 import pickle
-from scipy import sparse
-from scipy.optimize import minimize_scalar
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-from matplotlib import patches
-from tqdm import tqdm
+
+from scipy import sparse
+from tqdm.auto import tqdm
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, match_coordinates_3d
 from astropy.stats import sigma_clip, SigmaClip
@@ -27,6 +29,7 @@ c_min, c_max = 12, 1112
 remove_sat = True
 mask_bright = True
 
+# dictionary with FFI file names and in-quarter mapping
 quarter_ffi = {
     0: [
         "kplr2009114174833_ffi-cal.fits",
@@ -63,6 +66,11 @@ quarter_ffi = {
 
 
 class KeplerFFI(object):
+    """
+    Class for loading Kepler's FFI files and compute PRF models out of them following
+    the method discussed in Hedges et al. 2021 and Martinez-Palomera et al. 2021.
+    """
+
     def __init__(
         self,
         ffi_name: str = "",
@@ -71,6 +79,91 @@ class KeplerFFI(object):
         plot: bool = True,
         save: bool = True,
     ):
+        """
+        Initializzation of the KeplerFFI class
+        Parameters
+        ----------
+        ffi_name : string
+            Name of the FFI file used to model the PRF profile. Either ffi_name or
+            quarter can be provided.
+        channel : int
+            Channel number of the FFI to be used to model the PRF. Valid values are
+            between 1 and 84.
+        quarter : int
+            Number of the quarter that will be used to model the PRF.
+            Either ffi_name or quarter can be provided, if quarter is provided,
+            then all FFI files observed during the time window of that quarter will
+            be used to model the PRF by averaging the images.
+            Valid values are between 1 and 17.
+        plot : boolean
+            Whether to clreate diagnostic plots or not.
+        save : boolean
+            Whether to save the models or not.
+
+        Attributes
+        ----------
+        channel : int
+            Number of the quarter that will be used to model the PRF.
+        quarter : int
+            Channel number of the FFI to be used to model the PRF.
+        plot : bool
+            Boolean to create diagnostic plots.
+        save : bool
+            Boolean to save models and figures.
+        hdr : dict
+            Header dictionary of the FFI file.
+        img : numpy.ndarray
+            Original FFI flux image in electros / sec.
+        wcs : astropy.WCS
+            Object with the WCS solution of the image.
+        col_2d : numpy.ndarray
+            Data array with the pixel column number in 2D
+        row_2d : numpy.ndarray
+            Data array with the pixel row number in 2D
+        ra_2d : numpy.ndarray
+            Data array with the pixel Right Ascension value in 2D, in degs
+        dec_2d : numpy.ndarray
+            Data array with the pixel Declination value in 2D, in degs
+        flux_2d : numpy.ndarray
+            Data array with the flux value of each pixel with substracted background
+            in 2D, in electros / sec.
+        sources : pandas.DataFrame
+            Catalog with Gaia sources observed in the image, after cleaning.
+        flux : numpy.ndarray
+            Data array with the flux value of each pixel with substracted background
+            in 1D after removing saturated & bright pixels. in electros / sec.
+        flux_err : numpy.ndarray
+            Data array with the flux error value of each pixel with substracted
+            background in 1D after removing saturated & bright pixels. in electros / sec.
+        col : numpy.ndarray
+            Data array with the pixel column number in 1D after removing saturated &
+            bright pixels
+        row : numpy.ndarray
+            Data array with the pixel row number in 1D after removing saturated &
+            bright pixels
+        nsurces : int
+            Total number of sources observed in the image after cleaning.
+        npixels : int
+            Total number of pixels in the image
+
+        gf : numpy.ndarray
+            Data array with the Gaia flux value for every source.
+        dflux : scipy.sparse.csr_matrix
+            Sparse matrix with pixel flux value within r < 7 pixels of the source
+            coordinates. Has shape [nsources , npixels]
+        dx : scipy.sparse.csr_matrix
+            Sparse matrix with distance between the pixel within r < 7 pixels and the
+            source location, in pixel units. Has shape [nsources , npixels]
+        dy : scipy.sparse.csr_matrix
+            Sparse matrix with distance between the pixel within r < 7 pixels and the
+            source location, in pixel units. Has shape [nsources , npixels]
+        r : scipy.sparse.csr_matrix
+            Sparse matrix with radial distance between pixels within r < 7 and the
+            source location, in polar coordinates. Has shape [nsources , npixels]
+        phi : scipy.sparse.csr_matrix
+            Sparse matrix with angle value of pixels within r < 7 and the
+            source location, in polar coordinates. Has shape [nsources , npixels]
+        """
 
         self.channel = channel
         self.plot = plot
@@ -151,7 +244,7 @@ class KeplerFFI(object):
             non_sat_mask = ~self._saturated_pixels_mask(
                 flux, col, row, saturation_limit=1.5e5
             )
-            print("Saturated pixels %i" % (np.sum(~non_sat_mask)))
+            print("Saturated pixels %i: " % (np.sum(~non_sat_mask)))
             self.non_sat_mask = non_sat_mask
 
             col = col[non_sat_mask]
@@ -164,7 +257,7 @@ class KeplerFFI(object):
             bright_mask = ~self._mask_bright_sources(
                 flux, col, row, clean_sources, mag_limit=10
             )
-            print("Bright pixels %i" % (np.sum(~bright_mask)))
+            print("Bright pixels %i: " % (np.sum(~bright_mask)))
             self.bright_mask = bright_mask
 
             col = col[bright_mask]
@@ -178,7 +271,7 @@ class KeplerFFI(object):
             & (clean_sources.phot_g_mean_flux < 1e6)
         ].reset_index(drop=True)
 
-        print("Total Gaia sources %i" % (clean_sources.shape[0]))
+        print("Total Gaia sources %i: " % (clean_sources.shape[0]))
 
         self.sources = clean_sources
         self.flux = flux
@@ -191,25 +284,11 @@ class KeplerFFI(object):
         self.rmin = 0.25
         self.rmax = 3.0
 
-        # self._create_sparse()
-
-        # # compute PSF edge model
-        # print("Computing PSF edges...")
-        # radius = self._find_psf_edge(
-        #     self.r, self.dflux, self.gf, radius_limit=6.0, cut=200, dm_type="cubic"
-        # )
-        #
-        # # compute PSF model
-        # print("Computing PSF model...")
-        # self.psf_data = self._build_psf_model(
-        #     self.r, self.phi, self.dflux, self.gf, radius * 2, self.dx, self.dy
-        #     rknots=4, phiknots=12
-        # )
-
     @staticmethod
     def download_ffi(fits_name):
         """
         Download FFI fits file to a dedicated quarter directory
+
         Parameters
         ----------
         fits_name : string
@@ -228,6 +307,28 @@ class KeplerFFI(object):
         return
 
     def _do_query(self, ra_q, dec_q, rad, epoch):
+        """
+        Query Gaia catalogs (EDR3 default) to obtain sources observed in the FFI.
+        If query finishs ok, result will be saved for future use in the following
+        directory:
+            ../data/catalogs/ffi/<quarter#>/channel_<channel#_gaia_xmatch.csv
+
+        Parameters
+        ----------
+        ra_q : list
+            Value of the Right Ascension coordinate used for the query, in deg.
+        dec_q : list
+            Value of the Declination coordinate used for the query, in deg.
+        rad : list
+            Value of the radius coordinate used for the query, in deg.
+        epoch : float
+            Year of the observation (Julian year) used for proper motion correction.
+
+        Returns
+        -------
+        sources : pandas.DataFrame
+            Clean catalog
+        """
         file_name = "../data/catalogs/ffi/%s/channel_%i_gaia_xmatch.csv" % (
             str(self.quarter),
             self.channel,
@@ -235,7 +336,7 @@ class KeplerFFI(object):
         if os.path.isfile(file_name):
             print("Loading query from file...")
             print(file_name)
-            sources = pd.read_csv(file_name)
+            sources = pd.read_csv(file_name).drop("Unnamed: 0", axis=1)
         else:
             try:
                 sources = get_gaia_sources(
@@ -283,6 +384,20 @@ class KeplerFFI(object):
         return sources
 
     def _clean_source_list(self, sources):
+        """
+        Function to clean surces from the catalog removing sources near the borders,
+        with 10 pixel tolerance, and to remove blended sources (within 8")
+
+        Parameters
+        ----------
+        sources : pandas.DataFrame
+            Catalog with sources to be removed
+
+        Returns
+        -------
+        sources : pandas.DataFrame
+            Clean catalog
+        """
 
         print("Cleaning sources table...")
 
@@ -298,7 +413,7 @@ class KeplerFFI(object):
         # find well separated sources
         s_coords = SkyCoord(sources.ra, sources.dec, unit=("deg"))
         midx, mdist = match_coordinates_3d(s_coords, s_coords, nthneighbor=2)[:2]
-        # remove sources closer than 4" = 1 pix
+        # remove sources closer than 8" = 2 pix
         closest = mdist.arcsec < 8.0
         blocs = np.vstack([midx[closest], np.where(closest)[0]])
         bmags = np.vstack(
@@ -321,6 +436,18 @@ class KeplerFFI(object):
         This class generates full-sized background and background RMS images
         from lower-resolution mesh images using the `~scipy.ndimage.zoom`
         (spline) interpolator.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Data arra with the pixel flux values.
+        mask : numpy.ndarray
+            Boolean array to mask pixels with sources.
+
+        Returns
+        -------
+        background : numpy.ndarray
+            Data array with background model
         """
         model = Background2D(
             data,
@@ -336,7 +463,25 @@ class KeplerFFI(object):
         return model.background
 
     def _saturated_pixels_mask(self, flux, column, row, saturation_limit=1.5e5):
-        """Finds and removes saturated pixels, including bleed columns."""
+        """
+        Finds and removes saturated pixels, including bleed columns.
+
+        Parameters
+        ----------
+        flux : numpu.ndarray
+            Data array with pixel flux value
+        column : numpy.ndarray
+            Data array with pixel column value
+        row : numpy.ndarray
+            Data array with pixel row value
+        saturation_limit : foat
+            Saturation limit at which pixels are removed.
+
+        Returns
+        -------
+        mask : numpy.ndarray
+            Boolean mask with rejected pixels
+        """
         # Which pixels are saturated
         # saturated = np.nanpercentile(flux, 99, axis=0)
         saturated = np.where((flux > saturation_limit).astype(float))[0]
@@ -361,7 +506,27 @@ class KeplerFFI(object):
         return m
 
     def _mask_bright_sources(self, flux, column, row, sources, mag_limit=10):
-        """Finds and removes halos produced by bright stars (<10 mag)"""
+        """
+        Finds and removes halos produced by bright stars (<10 mag)
+
+        Parameters
+        ----------
+        flux : numpu.ndarray
+            Data array with pixel flux value
+        column : numpy.ndarray
+            Data array with pixel column value
+        row : numpy.ndarray
+            Data array with pixel row value
+        sources : pandas.DataFrame
+            Catalog wih observed sources in the image
+        mag_limit : foat
+            Magnitude limit at which bright sources are identified.
+
+        Returns
+        -------
+        mask : numpy.ndarray
+            Boolean mask with rejected pixels
+        """
         bright_mask = sources["phot_g_mean_mag"] <= mag_limit
         mask_radius = 30  # Pixels
 
@@ -374,8 +539,13 @@ class KeplerFFI(object):
         return mask
 
     def _create_sparse(self):
-        # create dx, dy, gf, r, phi, vectors
-        # gaia estimate flux values per pixel to be used as flux priors
+        """
+        Function to create sparse matrces (scipy.sparse.csr_matrix) for variables:
+        dx, dy, dflux, dfluxerr, r, and phy
+        This is extremelly necessary for FFI due to the large number of sources (~10k)
+        and pixels (~1.1M). The sparse matrices contain the pixel data around the
+        sources up to 7 pixels distance from the object location.
+        """
         dx, dy, sparse_mask = [], [], []
         for i in tqdm(range(len(self.sources)), desc="Gaia sources"):
             dx_aux = self.col - self.sources["col"].iloc[i]
@@ -427,7 +597,25 @@ class KeplerFFI(object):
         lower_radius_limit=1.1,
         flux_cut_off=300,
         dm_type="rf-quadratic",
+        plot=False,
     ):
+        """
+        Find the pixel mask that identifies pixels with contributions from ANY NUMBER of Sources
+        Fits a simple polynomial model to the log of the pixel flux values, in radial dimension and source flux,
+        to find the optimum circular apertures for every source.
+        Parameters
+        ----------
+        upper_radius_limit: float
+            The radius limit at which we assume there is no flux from a source of any brightness (arcsec)
+        lower_radius_limit: float
+            The radius limit at which we assume there is flux from a source of any brightness (arcsec)
+        upper_flux_limit: float
+            The flux at which we assume as source is saturated
+        lower_flux_limit: float
+            The flux at which we assume a source is too faint to model
+        plot: bool
+            Whether to show diagnostic plot. Default is False
+        """
         r = self.r
         mean_flux = self.dflux
         gf = self.gf
@@ -489,6 +677,22 @@ class KeplerFFI(object):
         self.radius = source_radius_limit + 0.5
         # self.source_mask = sparse.csr_matrix(self.r.value < self.radius[:, None])
 
+        # remove pixels outside the radius limit
+        source_mask = []
+        for s in range(self.r.shape[0]):
+            nonz_idx = self.r[s].nonzero()
+            rad_mask = self.r[s].data < self.radius[s]
+            aux = sparse.csr_matrix(
+                (
+                    self.r[s].data[rad_mask],
+                    (nonz_idx[0][rad_mask], nonz_idx[1][rad_mask]),
+                ),
+                shape=self.r[s].shape,
+            ).astype(bool)
+            source_mask.append(aux)
+        source_mask = sparse.vstack(source_mask, "csr")
+        self.source_mask = source_mask
+
         if self.save:
             to_save = dict(w=w, polifit_results=polifit_results)
             output = "../data/models/%s/channel_%02i_psf_edge_model_%s.pkl" % (
@@ -501,7 +705,7 @@ class KeplerFFI(object):
             with open(output, "wb") as file:
                 pickle.dump(to_save, file)
 
-        if self.plot:
+        if plot:
             fig, ax = plt.subplots(1, 2, figsize=(14, 5), facecolor="white")
 
             ax[0].scatter(r_mask, f_mask, s=0.4, c="k", alpha=0.5, label="Data")
@@ -555,62 +759,74 @@ class KeplerFFI(object):
 
                 plt.savefig(fig_name, format="png", bbox_inches="tight")
                 plt.close()
-            elif self.show:
-                plt.show()
+                return
 
-        return self.radius
+            plt.show()
 
-    # @profile
-    def _build_psf_model(self, rknots=10, phiknots=12, flux_cut_off=1):
+        return
 
-        r = self.r
-        phi = self.phi
-        mean_flux = self.dflux
-        mean_flux_err = self.dflux_err
-        flux_estimates = self.gf
+    def _get_uncontaminated_source_mask(self):
+        """
+        creates a mask of shape nsources x npixels where targets are not contaminated.
+        This mask is used to select pixels to build the PSF model.
+        """
+
         warnings.filterwarnings("ignore", category=sparse.SparseEfficiencyWarning)
         warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-        # remove pixels outside the radius limit and contaminated pixels
-        source_mask = []
-        for s in range(r.shape[0]):
-            nonz_idx = r[s].nonzero()
-            rad_mask = r[s].data < self.radius[s]
-            aux = sparse.csr_matrix(
-                (r[s].data[rad_mask], (nonz_idx[0][rad_mask], nonz_idx[1][rad_mask])),
-                shape=r[s].shape,
-            ).astype(bool)
-            source_mask.append(aux)
-        source_mask = sparse.vstack(source_mask, "csr")
-        print("# Contaminated pixels: ", (source_mask.sum(axis=0) > 1).sum())
-        source_mask = source_mask.multiply(source_mask.sum(axis=0) == 1).tocsr()
-        source_mask.eliminate_zeros()
+        self.uncontaminated_source_mask = self.source_mask.multiply(
+            self.source_mask.sum(axis=0) == 1
+        ).tocsr()
+        self.uncontaminated_source_mask.eliminate_zeros()
+
+    # @profile
+    def _build_psf_model(self, n_r_knots=10, n_phi_knots=12, cut_r=6, flux_cut_off=1):
+        """
+        Builds a sparse model matrix of shape nsources x npixels to be used when
+        fitting each source pixels to estimate its PSF photometry
+
+        Parameters
+        ----------
+        n_r_knots : int
+            Number of radial knots in the spline model.
+        n_phi_knots : int
+            Number of azimuthal knots in the spline model.
+        cut_r : int
+            Distance at which the spline Design matrix has only dependency in the
+            radial axis.
+        flux_cut_off: float
+            The flux in COUNTS at which to stop evaluating the model.
+        """
+
+        flux_estimates = self.gf
+        self.n_r_knots = n_r_knots
+        self.n_phi_knots = n_phi_knots
 
         # mean flux values using uncontaminated mask and normalized by flux estimations
         mean_f = np.log10(
-            source_mask.astype(float)
-            .multiply(mean_flux)
+            self.uncontaminated_source_mask.astype(float)
+            .multiply(self.dflux)
             .multiply(1 / flux_estimates[:, None])
             .data
         )
         mean_f_err = np.abs(
-            source_mask.astype(float)
-            .multiply(mean_flux_err)
+            self.uncontaminated_source_mask.astype(float)
+            .multiply(self.dflux_err)
             .multiply(1 / flux_estimates[:, None])
             .data
         )
-        phi_b = source_mask.multiply(phi).data
-        r_b = source_mask.multiply(r).data
+        phi_b = self.uncontaminated_source_mask.multiply(self.phi).data
+        r_b = self.uncontaminated_source_mask.multiply(self.r).data
 
         # build a design matrix A with b-splines basis in radius and angle axis.
         A = _make_A_polar(
             phi_b.ravel(),
             r_b.ravel(),
-            cut_r=6,
+            cut_r=cut_r,
             rmin=self.rmin,
             rmax=self.rmax,
-            n_r_knots=rknots,
-            n_phi_knots=phiknots,
+            n_r_knots=self.n_r_knots,
+            n_phi_knots=self.n_phi_knots,
         )
         prior_sigma = np.ones(A.shape[1]) * 100
         prior_mu = np.zeros(A.shape[1]) - 10
@@ -629,23 +845,29 @@ class KeplerFFI(object):
             res = np.ma.masked_array(mean_f.ravel(), ~nan_mask) - A.dot(psf_w)
             nan_mask &= ~sigma_clip(res, sigma=3).mask
 
+        self.psf_w = psf_w
+
         # We evaluate our DM and build PSF models per source
-        mean_model = sparse.csr_matrix(r.shape)
-        m = 10 ** A.dot(psf_w)
-        mean_model[source_mask] = m
-        mean_model.eliminate_zeros()
+        self._get_mean_model()
         # mean_model = mean_model.multiply(1 / mean_model.sum(axis=1))
 
         #  re-estimate source flux (from CH updates)
         prior_mu = flux_estimates
-        prior_sigma = np.ones(mean_model.shape[0]) * 10 * flux_estimates
+        prior_sigma = np.ones(self.mean_model.shape[0]) * 10 * flux_estimates
 
-        X = mean_model.copy().T
+        X = self.mean_model.copy().T
+
+        fmean = (
+            self.uncontaminated_source_mask.astype(float).multiply(self.dflux_err).data
+        )
+        femean = (
+            self.uncontaminated_source_mask.astype(float).multiply(self.dflux_err).data
+        )
 
         ws, werrs = solve_linear_model(
             X,
-            mean_f.ravel(),
-            y_err=mean_f_err.ravel(),
+            fmean,
+            y_err=femean,
             k=None,
             prior_mu=prior_mu,
             prior_sigma=prior_sigma,
@@ -660,142 +882,187 @@ class KeplerFFI(object):
 
         flux_estimates[ok] = ws[ok]
 
-        source_mask = (
-            mean_model.multiply(mean_model.T.dot(flux_estimates)).tocsr() > flux_cut_off
+        self.source_mask = (
+            self.mean_model.multiply(self.mean_model.T.dot(flux_estimates)).tocsr()
+            > flux_cut_off
         )
-        source_mask = source_mask.multiply(source_mask.sum(axis=0) == 1).tocsr()
-        source_mask.eliminate_zeros()
-        self.rmax = np.percentile(source_mask.multiply(r).data, 99.9)
-        Ap = _make_A_polar(
-            source_mask.multiply(phi).data,
-            source_mask.multiply(r).data,
-            rmin=self.rmin,
-            rmax=self.rmax,
-            n_r_knots=rknots,
-            n_phi_knots=phiknots,
+        # rebuild uncontaminated_source_mask
+        self._get_uncontaminated_source_mask()
+
+        # set new rmax for spline basis
+        self.rmax = np.percentile(
+            self.uncontaminated_source_mask.multiply(self.r).data, 99.9
         )
 
-        # And create a `mean_model` that has the psf model for all pixels with fluxes
-        mean_model = sparse.csr_matrix(r.shape)
-        m = 10 ** Ap.dot(psf_w)
-        m[~np.isfinite(m)] = 0
-        mean_model[source_mask] = m
-        mean_model.eliminate_zeros()
-        self.mean_model = mean_model
-        self.source_mask = source_mask
+        self._get_mean_model()
 
-        mean_f = np.log10(
-            source_mask.astype(float)
-            .multiply(mean_flux)
+        self.psf_w2 = ws
+
+        self.mean_flux = np.log10(
+            self.uncontaminated_source_mask.astype(float)
+            .multiply(self.dflux)
             .multiply(1 / flux_estimates[:, None])
             .data
         )
-        self.psf_data = dict(
-            psf_w=psf_w,
-            A=Ap,
-            x_data=source_mask.multiply(self.dx).data,
-            y_data=source_mask.multiply(self.dy).data,
-            f_data=mean_f,
-            f_model=np.log10(m),
-            clip_mask=nan_mask,
-            rmin=self.rmin,
-            rmax=self.rmax,
-            n_r_knots=rknots,
-            n_phi_knots=phiknots,
+
+        print(
+            "Total number of pixels data used for model fitting: ", self.mean_flux.shape
         )
 
-        print("Total number of pixels: ", mean_f.shape)
-
         if self.save:
-            output = "../data/models/%s/channel_%02i_psf_model.pkl" % (
-                str(self.quarter),
-                self.channel,
-            )
-            if not os.path.isdir("../data/models/%s" % str(self.quarter)):
-                os.mkdir("../data/models/%s" % str(self.quarter))
-            with open(output, "wb") as file:
-                pickle.dump(self.psf_data, file)
+            self.save_model()
 
         if self.plot:
-            # Plotting r,phi,meanflux used to build PSF model
-            ylim = source_mask.multiply(r).data.max() * 1.1
-            vmin = -3
-            vmax = -0.5
-            fig, ax = plt.subplots(2, 2, figsize=(12, 8))
-            ax[0, 0].set_title("Mean flux")
-            cax = ax[0, 0].scatter(
-                source_mask.multiply(phi).data,
-                source_mask.multiply(r).data,
-                c=mean_f,
-                marker=".",
-                s=2,
-                vmin=vmin,
-                vmax=vmax,
-                rasterized=True,
-            )
-            ax[0, 0].set_ylim(0, ylim)
-            fig.colorbar(cax, ax=ax[0, 0])
-            ax[0, 0].set_ylabel(r"$r$ [pixels]")
-            ax[0, 0].set_xlabel(r"$\phi$ [rad]")
-
-            ax[0, 1].set_title("Average PSF Model")
-            cax = cax = ax[0, 1].scatter(
-                source_mask.multiply(phi).data,
-                source_mask.multiply(r).data,
-                c=np.log10(m),
-                marker=".",
-                s=2,
-                vmin=vmin,
-                vmax=vmax,
-                rasterized=True,
-            )
-            ax[0, 1].set_ylim(0, ylim)
-            fig.colorbar(cax, ax=ax[0, 1])
-            ax[0, 1].set_xlabel(r"$\phi$ [rad]")
-
-            cax = ax[1, 0].scatter(
-                source_mask.multiply(self.dx).data,
-                source_mask.multiply(self.dy).data,
-                c=mean_f,
-                marker=".",
-                s=2,
-                vmin=vmin,
-                vmax=vmax,
-                rasterized=True,
-            )
-            fig.colorbar(cax, ax=ax[1, 0])
-            ax[1, 0].set_ylabel("dy")
-            ax[1, 0].set_xlabel("dx")
-
-            cax = ax[1, 1].scatter(
-                source_mask.multiply(self.dx).data,
-                source_mask.multiply(self.dy).data,
-                c=np.log10(m),
-                marker=".",
-                s=2,
-                vmin=vmin,
-                vmax=vmax,
-                rasterized=True,
-            )
-            fig.colorbar(cax, ax=ax[1, 1])
-            ax[1, 1].set_xlabel("dx")
-
-            if self.save:
-                fig_name = "../data/figures/%s/channel_%02i_psf_model.png" % (
-                    str(self.quarter),
-                    self.channel,
-                )
-                if not os.path.isdir("../data/figures/%s" % str(self.quarter)):
-                    os.mkdir("../data/figures/%s" % str(self.quarter))
-                plt.savefig(fig_name, format="png", bbox_inches="tight")
-                plt.close()
-            elif self.show:
-                plt.show()
+            self.plot_prf_shape()
 
         return
 
+    def _get_mean_model(self):
+        """
+        Convenience function to make the scene PRF model
+        """
+        Ap = _make_A_polar(
+            self.uncontaminated_source_mask.multiply(self.phi).data,
+            self.uncontaminated_source_mask.multiply(self.r).data,
+            rmin=self.rmin,
+            rmax=self.rmax,
+            n_r_knots=self.n_r_knots,
+            n_phi_knots=self.n_phi_knots,
+        )
+
+        # And create a `mean_model` that has the psf model for all pixels with fluxes
+        mean_model = sparse.csr_matrix(self.r.shape)
+        m = 10 ** Ap.dot(self.psf_w)
+        m[~np.isfinite(m)] = 0
+        mean_model[self.uncontaminated_source_mask] = m
+        mean_model.eliminate_zeros()
+        self.mean_model = mean_model
+        self.design_matrix = Ap
+
+        return
+
+    def save_model(self, path="./"):
+        """
+        Function to save the PRF model as a pickle file
+
+        Parameters
+        ----------
+        path : string
+            Path of the file
+        """
+        model_data = dict(
+            psf_w=self.psf_w,
+            design_matrix=self.design_matrix,
+            x_data=self.uncontaminated_source_mask.multiply(self.dx).data,
+            y_data=self.uncontaminated_source_mask.multiply(self.dy).data,
+            f_data=self.mean_flux,
+            f_model=np.log10(self.mean_model.data),
+            rmin=self.rmin,
+            rmax=self.rmax,
+            n_r_knots=self.n_r_knots,
+            n_phi_knots=self.n_phi_knots,
+        )
+
+        if self.save:
+            output = "%s/FFI_quarter%02i_channel_%02i_prf_model.pkl" % (
+                path,
+                self.quarter,
+                self.channel,
+            )
+            with open(output, "wb") as file:
+                pickle.dump(model_data, file)
+        return
+
+    def plot_prf_shape(self):
+        """
+        Function to plot the PRF model in Cartesian and Polar coordinates
+        """
+        ylim = self.uncontaminated_source_mask.multiply(self.r).data.max() * 1.1
+        vmin = -3
+        vmax = -0.5
+
+        phy = self.uncontaminated_source_mask.multiply(self.phi).data
+        r = self.uncontaminated_source_mask.multiply(self.r).data
+        x = self.uncontaminated_source_mask.multiply(self.dx).data
+        y = self.uncontaminated_source_mask.multiply(self.dy).data
+
+        fig, ax = plt.subplots(2, 2, figsize=(12, 8))
+        ax[0, 0].set_title("Mean flux")
+        cax = ax[0, 0].scatter(
+            phy,
+            r,
+            c=self.mean_flux,
+            marker=".",
+            s=2,
+            vmin=vmin,
+            vmax=vmax,
+            rasterized=True,
+        )
+        ax[0, 0].set_ylim(0, ylim)
+        fig.colorbar(cax, ax=ax[0, 0])
+        ax[0, 0].set_ylabel(r"$r$ [pixels]")
+        ax[0, 0].set_xlabel(r"$\phi$ [rad]")
+
+        ax[0, 1].set_title("Average PSF Model")
+        cax = cax = ax[0, 1].scatter(
+            phy,
+            r,
+            c=np.log10(self.mean_model.data),
+            marker=".",
+            s=2,
+            vmin=vmin,
+            vmax=vmax,
+            rasterized=True,
+        )
+        ax[0, 1].set_ylim(0, ylim)
+        fig.colorbar(cax, ax=ax[0, 1])
+        ax[0, 1].set_xlabel(r"$\phi$ [rad]")
+
+        cax = ax[1, 0].scatter(
+            x,
+            y,
+            c=self.mean_flux,
+            marker=".",
+            s=2,
+            vmin=vmin,
+            vmax=vmax,
+            rasterized=True,
+        )
+        fig.colorbar(cax, ax=ax[1, 0])
+        ax[1, 0].set_ylabel("dy")
+        ax[1, 0].set_xlabel("dx")
+
+        cax = ax[1, 1].scatter(
+            x,
+            y,
+            c=np.log10(self.mean_model.data),
+            marker=".",
+            s=2,
+            vmin=vmin,
+            vmax=vmax,
+            rasterized=True,
+        )
+        fig.colorbar(cax, ax=ax[1, 1])
+        ax[1, 1].set_xlabel("dx")
+
+        if self.save:
+            fig_name = "../data/figures/%s/channel_%02i_psf_model.png" % (
+                str(self.quarter),
+                self.channel,
+            )
+            if not os.path.isdir("../data/figures/%s" % str(self.quarter)):
+                os.mkdir("../data/figures/%s" % str(self.quarter))
+            plt.savefig(fig_name, format="png", bbox_inches="tight")
+            plt.close()
+        else:
+            plt.show()
+
     # @profile
     def fit_model(self):
+        """
+        Function to fit the PRF model and do LFD photometry for the sources observed in
+        the FFIs.
+        """
         prior_mu = self.gf
         prior_sigma = np.ones(self.mean_model.shape[0]) * 5 * np.abs(self.gf) ** 0.5
 
@@ -818,6 +1085,9 @@ class KeplerFFI(object):
         return
 
     def save_catalog(self):
+        """
+        Function to save the Photometry Catalog of FFI sources
+        """
         df = pd.DataFrame(
             [
                 self.sources.designation,
@@ -839,6 +1109,16 @@ class KeplerFFI(object):
         )
 
     def plot_image(self, ax=None, sources=False):
+        """
+        Function to plot the Full Frame Image and the Gaia Sources
+
+        Parameters
+        ----------
+        ax : matplotlib.axes
+            Matlotlib axis can be provided, if not one will be created and returned
+        sources : boolean
+            Whether to overplot or not the source catalog
+        """
         if ax is None:
             fig, ax = plt.subplots(1, figsize=(10, 10))
         ax = plt.subplot(projection=self.wcs)
@@ -879,6 +1159,14 @@ class KeplerFFI(object):
         return ax
 
     def plot_pixel_masks(self, ax=None):
+        """
+        Function to plot the mask used to reject saturated and bright pixels
+
+        Parameters
+        ----------
+        ax : matplotlib.axes
+            Matlotlib axis can be provided, if not one will be created and returned
+        """
         if ax is None:
             fig, ax = plt.subplots(1, figsize=(10, 10))
         ax.scatter(
