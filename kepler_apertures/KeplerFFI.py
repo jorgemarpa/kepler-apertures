@@ -80,7 +80,7 @@ class KeplerFFI(object):
         save: bool = True,
     ):
         """
-        Initializzation of the KeplerFFI class
+        Initialization of the KeplerFFI class
         Parameters
         ----------
         ffi_name : string
@@ -145,7 +145,6 @@ class KeplerFFI(object):
             Total number of sources observed in the image after cleaning.
         npixels : int
             Total number of pixels in the image
-
         gf : numpy.ndarray
             Data array with the Gaia flux value for every source.
         dflux : scipy.sparse.csr_matrix
@@ -600,15 +599,20 @@ class KeplerFFI(object):
         plot=False,
     ):
         """
-        Find the pixel mask that identifies pixels with contributions from ANY NUMBER of Sources
-        Fits a simple polynomial model to the log of the pixel flux values, in radial dimension and source flux,
-        to find the optimum circular apertures for every source.
+        Find the pixel mask that identifies pixels with contributions from ANY NUMBER
+        of Sources.
+        Fits a simple polynomial model to the log of the pixel flux values, in radial
+        dimension and source flux, to find the optimum circular apertures for every
+        source.
+
         Parameters
         ----------
         upper_radius_limit: float
-            The radius limit at which we assume there is no flux from a source of any brightness (arcsec)
+            The radius limit at which we assume there is no flux from a source of any
+            brightness (arcsec)
         lower_radius_limit: float
-            The radius limit at which we assume there is flux from a source of any brightness (arcsec)
+            The radius limit at which we assume there is flux from a source of any
+            \brightness (arcsec)
         upper_flux_limit: float
             The flux at which we assume as source is saturated
         lower_flux_limit: float
@@ -941,7 +945,7 @@ class KeplerFFI(object):
 
         return
 
-    def save_model(self, path="./"):
+    def save_model(self, path=None):
         """
         Function to save the PRF model as a pickle file
 
@@ -964,11 +968,19 @@ class KeplerFFI(object):
         )
 
         if self.save:
-            output = "%s/FFI_quarter%02i_channel_%02i_prf_model.pkl" % (
-                path,
-                self.quarter,
-                self.channel,
-            )
+            if path is None:
+                output = (
+                    "../data/models/%02i/FFI_quarter%02i_channel_%02i_prf_model.pkl"
+                    % (
+                        self.quarter,
+                        self.quarter,
+                        self.channel,
+                    )
+                )
+                if not os.path.isdir("../data/models/%02i" % self.quarter):
+                    os.mkdir("../data/models/%02i" % self.quarter)
+            else:
+                output = path
             with open(output, "wb") as file:
                 pickle.dump(model_data, file)
         return
