@@ -298,7 +298,7 @@ class KeplerFFI(object):
             raise ValueError("Invalid fits file name")
 
         if not os.path.isdir("../data/fits/ffi"):
-            os.mkdir("../data/fits/ffi")
+            os.makedirs("../data/fits/ffi")
 
         out = "../data/fits/ffi/%s" % (fits_name)
         wget.download("%s/%s" % (url, fits_name), out=out)
@@ -378,7 +378,7 @@ class KeplerFFI(object):
             sources = sources.loc[:, columns]
 
             if not os.path.isdir("../data/catalogs/ffi/%s" % str(self.quarter)):
-                os.mkdir("../data/catalogs/ffi/%s" % str(self.quarter))
+                os.makedirs("../data/catalogs/ffi/%s" % str(self.quarter))
             sources.to_csv(file_name)
         return sources
 
@@ -705,7 +705,7 @@ class KeplerFFI(object):
                 dm_type,
             )
             if not os.path.isdir("../data/models/%s" % str(self.quarter)):
-                os.mkdir("../data/models/%s" % str(self.quarter))
+                os.makedirs("../data/models/%s" % str(self.quarter))
             with open(output, "wb") as file:
                 pickle.dump(to_save, file)
 
@@ -759,7 +759,7 @@ class KeplerFFI(object):
                     dm_type,
                 )
                 if not os.path.isdir("../data/figures/%s" % (str(self.quarter))):
-                    os.mkdir("../data/figures/%s" % (str(self.quarter)))
+                    os.makedirs("../data/figures/%s" % (str(self.quarter)))
 
                 plt.savefig(fig_name, format="png", bbox_inches="tight")
                 plt.close()
@@ -978,7 +978,7 @@ class KeplerFFI(object):
                     )
                 )
                 if not os.path.isdir("../data/models/%02i" % self.quarter):
-                    os.mkdir("../data/models/%02i" % self.quarter)
+                    os.makedirs("../data/models/%02i" % self.quarter)
             else:
                 output = path
             with open(output, "wb") as file:
@@ -1063,7 +1063,7 @@ class KeplerFFI(object):
                 self.channel,
             )
             if not os.path.isdir("../data/figures/%s" % str(self.quarter)):
-                os.mkdir("../data/figures/%s" % str(self.quarter))
+                os.makedirs("../data/figures/%s" % str(self.quarter))
             plt.savefig(fig_name, format="png", bbox_inches="tight")
             plt.close()
         else:
@@ -1114,7 +1114,7 @@ class KeplerFFI(object):
         ).T
 
         if not os.path.isdir("../data/catalogs/ffi/source_catalog/"):
-            os.mkdir("../data/catalogs/ffi/source_catalog/")
+            os.makedirs("../data/catalogs/ffi/source_catalog/")
         df.to_csv(
             "../data/catalogs/ffi/source_catalog/channel_%s_source_catalog_mjd_%s.csv"
             % (self.channel, str(self.hdr["MJDSTART"]))
@@ -1165,7 +1165,7 @@ class KeplerFFI(object):
                 self.channel,
             )
             if not os.path.isdir("../data/figures/%s" % str(self.quarter)):
-                os.mkdir("../data/figures/%s" % str(self.quarter))
+                os.makedirs("../data/figures/%s" % str(self.quarter))
             plt.savefig(fig_name, format="png", bbox_inches="tight")
 
         return ax
@@ -1207,7 +1207,7 @@ class KeplerFFI(object):
                 self.channel,
             )
             if not os.path.isdir("../data/figures/%s" % str(self.quarter)):
-                os.mkdir("../data/figures/%s" % str(self.quarter))
+                os.makedirs("../data/figures/%s" % str(self.quarter))
             plt.savefig(fig_name, format="png", bbox_inches="tight")
 
         return ax
