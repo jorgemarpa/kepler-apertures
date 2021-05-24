@@ -9,7 +9,7 @@ First we create PRF models using Kepler's FFI which contains ~10k-20k Gaia DR2 s
 
 The following figure shows the PRF models in the focal plane. Channels at the border shows PRFs with very distorted shapes, while in the center these are round and smooth.
 
-![PRF Models](https://github.com/jorgemarpa/kepler-apertures/blob/paper-release/figures/focal_plane_prf_model.png)
+![PRF Models](https://github.com/jorgemarpa/kepler-apertures/blob/paper-release/res/focal_plane_prf_model.png)
 
 Later this PRF models are used to compute optimal apertures to perform photometry.
 
@@ -19,7 +19,7 @@ The EXBA masks are custom apertures observed by Kepler's first mission, they cov
 
 Here an example of the full EXBA mask observed in quarter 5 with channel 48
 
-![exba_ch48](https://github.com/jorgemarpa/kepler-apertures/blob/paper-release/figures/EXBA_img_q5_ch48.png)
+![exba_ch48](https://github.com/jorgemarpa/kepler-apertures/blob/paper-release/res/EXBA_img_q5_ch48.png)
 
 # Dependencies
 * astropy
