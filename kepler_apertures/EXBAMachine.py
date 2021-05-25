@@ -22,6 +22,7 @@ from astropy.timeseries import BoxLeastSquares
 import lightkurve as lk
 
 from .utils import get_gaia_sources
+from .version import __version__
 
 
 class EXBAMachine(object):
@@ -549,30 +550,40 @@ class EXBAMachine(object):
         self.do_photometry(aperture_mask)
         lcs = []
         for idx, s in self.sources.iterrows():
+            tile = int((s.col - self.tpfs[0].column) / 9)
             meta = {
-                "ORIGIN": "ApertureMACHINE",
+                "ORIGIN": "EXBAMachine",
                 # "APERTURE_MASK": self.aperture_mask_2d[idx],
+                "VERSION": __version__,
                 "LABEL": s.designation,
                 "TARGETID": int(s.designation.split(" ")[-1]),
                 "MISSION": "Kepler",
+                "INSTRUME": "Kepler Photometer",
+                "OBSMODE": "long cadence",
+                "SEASON": self.tpfs[tile].get_header()["SEASON"],
                 "EQUINOX": 2000,
                 "RA": s.ra,
                 "DEC": s.dec,
-                "PMRA": s.pmra / 1000,
-                "PMDEC": s.pmdec / 1000,
-                "PARALLAX": s.parallax,
-                "GMAG": s.phot_g_mean_mag,
-                "RPMAG": s.phot_rp_mean_mag,
-                "BPMAG": s.phot_bp_mean_mag,
+                "PMRA": s.pmra / 1000 if np.isfinite(s.pmra) else None,
+                "PMDEC": s.pmdec / 1000 if np.isfinite(s.pmdec) else None,
+                "PARALLAX": s.parallax if np.isfinite(s.parallax) else None,
+                "GMAG": s.phot_g_mean_mag if np.isfinite(s.phot_g_mean_mag) else None,
+                "RPMAG": s.phot_rp_mean_mag
+                if np.isfinite(s.phot_rp_mean_mag)
+                else None,
+                "BPMAG": s.phot_bp_mean_mag
+                if np.isfinite(s.phot_bp_mean_mag)
+                else None,
                 "CHANNEL": self.channel,
                 "MODULE": self.hdr["MODULE"],
                 "OUTPUT": self.hdr["OUTPUT"],
                 "QUARTER": self.quarter,
                 "CAMPAIGN": "EXBA",
-                "ROW": s.row,
-                "COLUMN": s.col,
-                "FLFRCSAP": self.FLFRCSAP[idx],
-                "CROWDSAP": self.CROWDSAP[idx],
+                "ROW": np.round(s.row, decimals=4),
+                "COLUMN": np.round(s.col, decimals=4),
+                "FLFRCSAP": np.round(self.FLFRCSAP[idx], decimals=6),
+                "CROWDSAP": np.round(self.CROWDSAP[idx], decimals=6),
+                "PERCENT": self.cut[idx],
             }
             lc = lk.LightCurve(
                 time=self.time * units.d,
@@ -633,7 +644,6 @@ class EXBAMachine(object):
                         alpha_bounds=[1e-2, 1e2],
                         target_over_score=0.9,
                         target_under_score=0.8,
-                        verbose=False,
                     )
                     alpha = cbvcor.alpha
                     if plot:
@@ -702,7 +712,9 @@ class EXBAMachine(object):
             return hdu
 
     def lcs_to_fits(self, path=None):
-        """Save all the light curves to fits files..."""
+        """
+        Save all the light curves to fits files...
+        """
         hdu_list = []
         for i, lc in enumerate(self.lcs):
             # lc.quality = 0
@@ -745,7 +757,7 @@ class EXBAMachine(object):
         if ax is None:
             fig, ax = plt.subplots(1, figsize=(5, 7))
         ax = plt.subplot(projection=self.wcs)
-        ax.set_title("EXBA | Q: %i | Ch: %i" % (self.quarter, self.channel))
+        ax.set_title("EXBA mask Quarter %i Channel %i" % (self.quarter, self.channel))
         pc = ax.pcolormesh(
             self.column_2d,
             self.row_2d,
@@ -883,7 +895,7 @@ class EXBAMachine(object):
             s = source_idx
 
         ax.set_title(
-            "Ch: %i | Q: %i | Source %s (%i)"
+            "Channel %i  Quarter %i  Source %s (%i)"
             % (self.channel, self.quarter, self.lcs[s].label, s)
         )
         if hasattr(self, "flatten_lcs"):
