@@ -14,6 +14,7 @@ import matplotlib.colors as colors
 from matplotlib import patches
 from astropy.io import fits
 
+from . import PACKAGEDIR, DATAOUTDIR
 from .utils import _make_A_polar
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -98,7 +99,7 @@ class KeplerPRF(object):
             An object with the PRF model ready to be evaluated in new data.
         """
         # load PSF model
-        fname = "../res/ffi_prf_models_v0.1.csv"
+        fname = "%s/data/ffi_prf_models_v0.1.0.csv" % (PACKAGEDIR)
         if not os.path.isfile(fname):
             raise FileNotFoundError("No PSF files: ", fname)
 

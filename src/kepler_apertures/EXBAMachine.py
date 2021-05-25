@@ -21,6 +21,7 @@ from astropy.timeseries import BoxLeastSquares
 import lightkurve as lk
 
 from .utils import get_gaia_sources
+from . import PACKAGEDIR, DATAOUTDIR
 from .version import __version__
 
 
@@ -108,7 +109,8 @@ class EXBAMachine(object):
         # load local TPFs files
         tpfs_paths = np.sort(
             glob.glob(
-                "../data/fits/exba/q%i/ch%02i/*_lpd-targ.fits.gz" % (quarter, channel)
+                "%s/data/fits/exba/q%i/ch%02i/*_lpd-targ.fits.gz"
+                % (DATAOUTDIR, quarter, channel)
             )
         )
         if len(tpfs_paths) == 0:
@@ -116,8 +118,8 @@ class EXBAMachine(object):
             self.download_exba(channel=channel, quarter=quarter)
             tpfs_paths = np.sort(
                 glob.glob(
-                    "../data/fits/exba/q%i/ch%02i/*_lpd-targ.fits.gz"
-                    % (quarter, channel)
+                    "%s/data/fits/exba/q%i/ch%02i/*_lpd-targ.fits.gz"
+                    % (DATAOUTDIR, quarter, channel)
                 )
             )
 
@@ -231,16 +233,23 @@ class EXBAMachine(object):
             Number of quarter to be download, valid numbers are bwtween 1 and 17.
         """
         url = "https://archive.stsci.edu/missions/kepler/target_pixel_files/1000"
-        map = pd.read_csv("../res/exba_tpfs_info.csv", index_col=0)
+        map = pd.read_csv("%s/data/exba_tpfs_info.csv" % (PACKAGEDIR), index_col=0)
         file_names = map.query("channel == %i and quarter == %i" % (channel, quarter))
 
-        if not os.path.isdir("../data/fits/exba/q%i/ch%02i" % (quarter, channel)):
-            os.makedirs("../data/fits/exba/q%i/ch%02i" % (quarter, channel))
+        if not os.path.isdir(
+            "%s/data/fits/exba/q%i/ch%02i" % (DATAOUTDIR, quarter, channel)
+        ):
+            os.makedirs("%s/data/fits/exba/q%i/ch%02i" % (DATAOUTDIR, quarter, channel))
 
         for i, row in file_names.iterrows():
             name = row["file_name"]
             kid = row["kepler_id"].split(" ")[-1]
-            out = "../data/fits/exba/q%i/ch%02i/%s" % (quarter, channel, name)
+            out = "%s/data/fits/exba/q%i/ch%02i/%s" % (
+                DATAOUTDIR,
+                quarter,
+                channel,
+                name,
+            )
             print("%s/%s/%s" % (url, kid, name))
             wget.download("%s/%s/%s" % (url, kid, name), out=out)
 
@@ -419,7 +428,8 @@ class EXBAMachine(object):
             "phot_rp_mean_flux_error",
             "phot_rp_mean_mag",
         ]
-        file_name = "../data/catalogs/exba/%i/channel_%02i_gaiadr%s_xmatch.csv" % (
+        file_name = "%s/data/catalogs/exba/%i/channel_%02i_gaiadr%s_xmatch.csv" % (
+            DATAOUTDIR,
             self.quarter,
             self.channel,
             str(self.gaia_dr),
@@ -445,6 +455,10 @@ class EXBAMachine(object):
                 dr=self.gaia_dr,
             )
             sources = sources.loc[:, columns]
+            if not os.path.isdir(
+                "%s/data/catalogs/exba/%i" % (DATAOUTDIR, self.quarter)
+            ):
+                os.makedirs("%s/data/catalogs/exba/%i" % (DATAOUTDIR, self.quarter))
             sources.to_csv(file_name)
         return sources
 

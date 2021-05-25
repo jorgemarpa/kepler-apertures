@@ -23,6 +23,7 @@ from astropy.time import Time
 from astropy.wcs import WCS
 from photutils import Background2D, MedianBackground, BkgZoomInterpolator
 
+from . import PACKAGEDIR, DATAOUTDIR
 from .utils import get_gaia_sources, make_A_edges, solve_linear_model, _make_A_polar
 
 r_min, r_max = 20, 1044
@@ -171,9 +172,9 @@ class KeplerFFI(object):
         self.show = False
 
         if quarter is not None and quarter in np.arange(18):
-            fname = "../data/fits/ffi/%s" % (quarter_ffi[quarter][0])
+            fname = "%s/data/fits/ffi/%s" % (DATAOUTDIR, quarter_ffi[quarter][0])
         elif len(ffi_name) == 17 and ffi_name[:4] == "kplr":
-            fname = "../data/fits/ffi/%s_ffi-cal.fits" % (ffi_name)
+            fname = "%s/data/fits/ffi/%s_ffi-cal.fits" % (DATAOUTDIR, ffi_name)
         else:
             raise ValueError("Invalid quarter or FFI fits file name")
 
@@ -292,10 +293,10 @@ class KeplerFFI(object):
         if fits_name == "":
             raise ValueError("Invalid fits file name")
 
-        if not os.path.isdir("../data/fits/ffi"):
-            os.makedirs("../data/fits/ffi")
+        if not os.path.isdir("%s/data/fits/ffi" % (DATAOUTDIR)):
+            os.makedirs("%s/data/fits/ffi" % (DATAOUTDIR))
 
-        out = "../data/fits/ffi/%s" % (fits_name)
+        out = "%s/data/fits/ffi/%s" % (DATAOUTDIR, fits_name)
         wget.download("%s/%s" % (url, fits_name), out=out)
 
         return
@@ -325,7 +326,8 @@ class KeplerFFI(object):
         sources : pandas.DataFrame
             Clean catalog
         """
-        file_name = "../data/catalogs/ffi/%s/channel_%i_gaia_xmatch.csv" % (
+        file_name = "%s/data/catalogs/ffi/%s/channel_%i_gaia_xmatch.csv" % (
+            DATAOUTDIR,
             str(self.quarter),
             self.channel,
         )
@@ -399,8 +401,10 @@ class KeplerFFI(object):
             ]
             sources = sources.loc[:, columns]
 
-            if not os.path.isdir("../data/catalogs/ffi/%s" % str(self.quarter)):
-                os.makedirs("../data/catalogs/ffi/%s" % str(self.quarter))
+            if not os.path.isdir(
+                "%s/data/catalogs/ffi/%i" % (DATAOUTDIR, self.quarter)
+            ):
+                os.makedirs("%s/data/catalogs/ffi/%i" % (DATAOUTDIR, self.quarter))
             sources.to_csv(file_name)
         return sources
 
@@ -763,13 +767,14 @@ class KeplerFFI(object):
                 xlabel=("log$_{10}$ Source Flux"),
             )
             if self.save:
-                fig_name = "../data/figures/%s/channel_%02i_psf_edge_model_%s.png" % (
+                fig_name = "%s/data/figures/%s/channel_%02i_psf_edge_model_%s.png" % (
+                    DATAOUTDIR,
                     str(self.quarter),
                     self.channel,
                     dm_type,
                 )
-                if not os.path.isdir("../data/figures/%s" % (str(self.quarter))):
-                    os.makedirs("../data/figures/%s" % (str(self.quarter)))
+                if not os.path.isdir("%s/data/figures/%i" % (DATAOUTDIR, self.quarter)):
+                    os.makedirs("%s/data/figures/%i" % (DATAOUTDIR, self.quarter))
 
                 plt.savefig(fig_name, format="png", bbox_inches="tight")
                 plt.close()
@@ -794,7 +799,7 @@ class KeplerFFI(object):
         self.uncontaminated_source_mask.eliminate_zeros()
 
     # @profile
-    def _build_psf_model(self, n_r_knots=10, n_phi_knots=12, cut_r=6, flux_cut_off=1):
+    def _build_prf_shape(self, n_r_knots=10, n_phi_knots=12, cut_r=6, flux_cut_off=1):
         """
         Builds a sparse model matrix of shape nsources x npixels to be used when
         fitting each source pixels to estimate its PSF photometry
@@ -955,6 +960,39 @@ class KeplerFFI(object):
 
         return
 
+    def build_prf_model(self, n_r_knots=5, n_phi_knots=15):
+        """
+        Function that creates a PRF shape using the sources. In combines all other
+        helping functions that build the source mask, remove contaminated pixels,
+        estimate PRF edges, and create the final PRF model.
+
+        For details see:
+            `self._create_sparse()`
+            `self._get_source_mask()`
+            `self._get_uncontaminated_source_mask()`
+            `self._build_prf_shape()`
+
+        Default parameters where used for Martinez-Palomera et al. 2021.
+
+        Parameters
+        ----------
+        n_r_knots : int
+            Number of radial knots in the spline model.
+        n_phi_knots : int
+            Number of azimuthal knots in the spline model.
+        """
+        psf._create_sparse()
+        psf._get_source_mask(
+            upper_radius_limit=5,
+            lower_radius_limit=1.1,
+            flux_cut_off=50,
+            dm_type="rf-quadratic",
+        )
+        psf._get_uncontaminated_source_mask()
+        psf._build_prf_shape(
+            n_r_knots=n_r_knots, n_phi_knots=n_phi_knots, flux_cut_off=1
+        )
+
     def save_model(self, path=None):
         """
         Function to save the PRF model weights, number of knots for r and phy, and
@@ -974,7 +1012,7 @@ class KeplerFFI(object):
             Path of the file
         """
         if path is None:
-            fname = "../res/ffi_prf_models_v0.1.1.csv"
+            fname = "%s/data/ffi_prf_models_v0.1.1.csv" % (PACKAGEDIR)
         else:
             fname = path
 
@@ -1024,13 +1062,14 @@ class KeplerFFI(object):
                 df_new = pd.concat(df_dict, axis=1, keys=df_dict.keys())
                 df = pd.concat([df, df_new], axis=1)
 
-            df.to_csv(fname)
+            # df.to_csv(fname)
 
         return
 
     def save_model_retro(self, path=None):
         """
-        Function to save the PRF model as a pickle file
+        Function to save the PRF model as a pickle file.
+        Depricated.
 
         Parameters
         ----------
@@ -1052,12 +1091,13 @@ class KeplerFFI(object):
 
         if self.save:
             if path is None:
-                output = "../data/models/%i/channel_%02i_psf_model.pkl" % (
+                output = "%s/data/models/%i/channel_%02i_psf_model.pkl" % (
+                    DATAOUTDIR,
                     self.quarter,
                     self.channel,
                 )
-                if not os.path.isdir("../data/models/%i" % self.quarter):
-                    os.makedirs("../data/models/%i" % self.quarter)
+                if not os.path.isdir("%s/data/models/%i" % (DATAOUTDIR, self.quarter)):
+                    os.makedirs("%s/data/models/%i" % (DATAOUTDIR, self.quarter))
             else:
                 output = path
             with open(output, "wb") as file:
@@ -1137,12 +1177,13 @@ class KeplerFFI(object):
         ax[1, 1].set_xlabel("dx")
 
         if self.save:
-            fig_name = "../data/figures/%s/channel_%02i_psf_model.png" % (
+            fig_name = "%s/data/figures/%s/channel_%02i_psf_model.png" % (
+                DATAOUTDIR,
                 str(self.quarter),
                 self.channel,
             )
-            if not os.path.isdir("../data/figures/%s" % str(self.quarter)):
-                os.makedirs("../data/figures/%s" % str(self.quarter))
+            if not os.path.isdir("%s/data/figures/%i" % (DATAOUTDIR, self.quarter)):
+                os.makedirs("%s/data/figures/%i" % (DATAOUTDIR, self.quarter))
             plt.savefig(fig_name, format="png", bbox_inches="tight")
             plt.close()
         else:
@@ -1192,11 +1233,11 @@ class KeplerFFI(object):
             index=["Gaia_source_id", "RA", "DEC", "Column", "Row", "Flux", "Flux_err"],
         ).T
 
-        if not os.path.isdir("../data/catalogs/ffi/source_catalog/"):
-            os.makedirs("../data/catalogs/ffi/source_catalog/")
+        if not os.path.isdir("%s/data/catalogs/ffi/source_catalog/" % (DATAOUTDIR)):
+            os.makedirs("%s/data/catalogs/ffi/source_catalog/" % (DATAOUTDIR))
         df.to_csv(
-            "../data/catalogs/ffi/source_catalog/channel_%s_source_catalog_mjd_%s.csv"
-            % (self.channel, str(self.hdr["MJDSTART"]))
+            "%s/data/catalogs/ffi/source_catalog/channel_%s_source_catalog_mjd_%s.csv"
+            % (DATAOUTDIR, self.channel, str(self.hdr["MJDSTART"]))
         )
 
     def plot_image(self, ax=None, sources=False):
@@ -1244,12 +1285,13 @@ class KeplerFFI(object):
             )
 
         if self.save:
-            fig_name = "../data/figures/%s/channel_%02i_ffi_image.png" % (
+            fig_name = "%s/data/figures/%s/channel_%02i_ffi_image.png" % (
+                DATAOUTDIR,
                 str(self.quarter),
                 self.channel,
             )
-            if not os.path.isdir("../data/figures/%s" % str(self.quarter)):
-                os.makedirs("../data/figures/%s" % str(self.quarter))
+            if not os.path.isdir("%s/data/figures/%i" % (DATAOUTDIR, self.quarter)):
+                os.makedirs("%s/data/figures/%i" % (DATAOUTDIR, self.quarter))
             plt.savefig(fig_name, format="png", bbox_inches="tight")
 
         return ax
@@ -1291,12 +1333,13 @@ class KeplerFFI(object):
         ax.set_title("Pixel Mask")
 
         if self.save:
-            fig_name = "../data/figures/%s/channel_%02i_ffi_pixel_mask.png" % (
+            fig_name = "%s/data/figures/%s/channel_%02i_ffi_pixel_mask.png" % (
+                DATAOUTDIR,
                 str(self.quarter),
                 self.channel,
             )
-            if not os.path.isdir("../data/figures/%s" % str(self.quarter)):
-                os.makedirs("../data/figures/%s" % str(self.quarter))
+            if not os.path.isdir("%s/data/figures/%i" % (DATAOUTDIR, self.quarter)):
+                os.makedirs("%s/data/figures/%i" % (DATAOUTDIR, self.quarter))
             plt.savefig(fig_name, format="png", bbox_inches="tight")
 
         return ax

@@ -1,7 +1,12 @@
 from __future__ import absolute_import
+import os
 import logging
-from .KeplerPRF import KeplerPRF
+
+PACKAGEDIR = os.path.abspath(os.path.dirname(__file__))
+DATAOUTDIR = os.path.dirname(os.getcwd())
+
 from .KeplerFFI import KeplerFFI
+from .KeplerPRF import KeplerPRF
 from .EXBAMachine import EXBAMachine
 from .version import *
 
