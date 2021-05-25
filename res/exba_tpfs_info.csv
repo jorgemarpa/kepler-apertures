@@ -1,4 +1,4 @@
-,file_name,Kepler_id,quarter,channel
+,file_name,kepler_id,quarter,channel
 0,kplr100002059-2013131215648_lpd-targ.fits.gz,KIC 100002059,17,53
 1,kplr100002059-2010174085026_lpd-targ.fits.gz,KIC 100002059,5,53
 2,kplr100002059-2012179063303_lpd-targ.fits.gz,KIC 100002059,13,53
