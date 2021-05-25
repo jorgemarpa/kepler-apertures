@@ -13,6 +13,9 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Astronomy",
 ]
 
+[tool.coverage.paths]
+source = ["src"]
+
 [tool.poetry.dependencies]
 python = "^3.8"
 numpy = "^1.19.4"
