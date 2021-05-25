@@ -1,11 +1,12 @@
 from __future__ import absolute_import
 import logging
-from .KeplerPSF import KeplerFFI, KeplerPSF
-from .ApertureMachine import EXBAsources
+from .KeplerPRF import KeplerPRF
+from .KeplerFFI import KeplerFFI
+from .EXBAMachine import EXBAMachine
+from .version import *
 
 # Configure logging
 log = logging.getLogger(__name__)
 log.addHandler(logging.StreamHandler())
 
-__version__ = "0.1.0"
-__all__ = ["KeplerFFI", "KeplerPSF", "EXBAsources"]
+__all__ = ["KeplerFFI", "KeplerPRF", "EXBAMachine"]
