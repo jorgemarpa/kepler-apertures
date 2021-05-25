@@ -16,6 +16,7 @@ import matplotlib.colors as colors
 from scipy import sparse
 from tqdm.auto import tqdm
 from astropy.io import fits
+from astropy.table import Table
 from astropy.coordinates import SkyCoord, match_coordinates_3d
 from astropy.stats import sigma_clip, SigmaClip
 from astropy.time import Time
@@ -947,6 +948,79 @@ class KeplerFFI(object):
 
     def save_model(self, path=None):
         """
+        Function to save the PRF model weights, number of knots for r and phy, and
+        rmin and rmax to re-build the Design Matrix.
+        The file is a csv table, that contain a multi-index column table. Rows are each
+        channel, and columns are:
+            ["n_r_knots", "n_phi_knots", "rmin", "rmax", ...prf_ws...]
+        This file can be loaded as:
+            pd.read_csv(fname, index_col=0, header=[0, 1])
+
+        Note: models with different number of knots lead to different number of weights,
+        and ins necessary to create separete files to preserve the esctructure.
+
+        Parameters
+        ----------
+        path : string
+            Path of the file
+        """
+        if path is None:
+            fname = "../res/ffi_prf_models_v0.1.1.csv"
+        else:
+            fname = path
+
+        arr_to_save = np.array(
+            [self.n_r_knots, self.n_phi_knots, self.rmin, self.rmax]
+            + self.psf_w.tolist()
+        )
+
+        if not os.path.isfile(fname):
+            df_dict = {
+                self.quarter: pd.DataFrame(
+                    np.atleast_2d(arr_to_save),
+                    index=[self.channel],
+                    columns=["n_r_knots", "n_phi_knots", "rmin", "rmax"]
+                    + ["w%02i" % i for i in range(1, 1 + len(self.psf_w))],
+                )
+            }
+            df = pd.concat(df_dict, axis=1, keys=df_dict.keys())
+            df.to_csv(fname)
+
+        else:
+            df = pd.read_csv(fname, index_col=0, header=[0, 1])
+
+            if str(self.quarter) in df.columns.levels[0]:
+                if self.channel in df.index:
+                    if (
+                        int(df.loc[self.channel, (str(self.quarter), "n_r_knots")])
+                        != self.n_r_knots
+                        or int(df.loc[self.channel, (str(self.quarter), "n_phi_knots")])
+                        != self.n_phi_knots
+                    ):
+                        raise ValueError(
+                            "Number of knots for r or phi in the file does not"
+                            + "matches the number used in the current model. "
+                            + "Create a new file for current model."
+                        )
+                df.loc[self.channel, str(self.quarter)] = arr_to_save
+            else:
+                df_dict = {
+                    self.quarter: pd.DataFrame(
+                        np.atleast_2d(arr_to_save),
+                        index=[self.channel],
+                        columns=["n_r_knots", "n_phi_knots", "rmin", "rmax"]
+                        + ["b%02i" % i for i in range(1, 1 + len(self.psf_w))],
+                    )
+                }
+                df_new = pd.concat(df_dict, axis=1, keys=df_dict.keys())
+                df = pd.concat([df, df_new], axis=1)
+
+            df.to_csv(fname)
+
+        return
+
+    def save_model_retro(self, path=None):
+        """
         Function to save the PRF model as a pickle file
 
         Parameters
@@ -956,7 +1030,7 @@ class KeplerFFI(object):
         """
         model_data = dict(
             psf_w=self.psf_w,
-            design_matrix=self.design_matrix,
+            A=self.design_matrix,
             x_data=self.uncontaminated_source_mask.multiply(self.dx).data,
             y_data=self.uncontaminated_source_mask.multiply(self.dy).data,
             f_data=self.mean_flux,
@@ -969,16 +1043,12 @@ class KeplerFFI(object):
 
         if self.save:
             if path is None:
-                output = (
-                    "../data/models/%02i/FFI_quarter%02i_channel_%02i_prf_model.pkl"
-                    % (
-                        self.quarter,
-                        self.quarter,
-                        self.channel,
-                    )
+                output = "../data/models/%i/channel_%02i_psf_model.pkl" % (
+                    self.quarter,
+                    self.channel,
                 )
-                if not os.path.isdir("../data/models/%02i" % self.quarter):
-                    os.makedirs("../data/models/%02i" % self.quarter)
+                if not os.path.isdir("../data/models/%i" % self.quarter):
+                    os.makedirs("../data/models/%i" % self.quarter)
             else:
                 output = path
             with open(output, "wb") as file:
