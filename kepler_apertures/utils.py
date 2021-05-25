@@ -53,8 +53,6 @@ def get_gaia_sources(ras, decs, rads, magnitude_limit=18, epoch=2020, dr=2):
     if not hasattr(rads, "__iter__"):
         rads = [rads]
 
-    # Gaia = GaiaClass(TapPlus(url="http://gaia.ari.uni-heidelberg.de/tap"))
-
     wheres = [
         f"""1=CONTAINS(
                   POINT('ICRS',ra,dec),

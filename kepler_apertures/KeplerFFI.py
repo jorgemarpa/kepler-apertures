@@ -199,18 +199,19 @@ class KeplerFFI(object):
         rad = [np.hypot(ra - ra.mean(), dec - dec.mean()).max()]
 
         time = Time(self.hdr["TSTART"] + 2454833, format="jd")
-        print(
-            "Will query with this (ra, dec, radius, epoch): ",
-            ra_q,
-            dec_q,
-            rad,
-            time.jyear,
-        )
         if ra_q[0] > 360 or np.abs(dec_q[0]) > 90 or rad[0] > 5:
             raise ValueError(
                 "Query values are out of bound, please check WCS solution."
             )
-        sources = self._do_query(ra_q, dec_q, rad, time.jyear)
+
+        # remove border Pixels
+        self.col_2d = col_2d[r_min:r_max, c_min:c_max] - c_min
+        self.row_2d = row_2d[r_min:r_max, c_min:c_max] - r_min
+        self.ra_2d = ra_2d[r_min:r_max, c_min:c_max]
+        self.dec_2d = dec_2d[r_min:r_max, c_min:c_max]
+        flux_2d = self.img[r_min:r_max, c_min:c_max]
+
+        sources = self._do_big_query(self.ra_2d, self.dec_2d, time.jyear)
         sources["col"], sources["row"] = self.wcs.all_world2pix(
             sources.loc[:, ["ra", "dec"]].values, 0.5
         ).T
@@ -222,13 +223,6 @@ class KeplerFFI(object):
         # clean out-of-ccd and blended sources
         clean_sources = self._clean_source_list(sources)
         del sources
-
-        # remove useless Pixels
-        self.col_2d = col_2d[r_min:r_max, c_min:c_max] - c_min
-        self.row_2d = row_2d[r_min:r_max, c_min:c_max] - r_min
-        self.ra_2d = ra_2d[r_min:r_max, c_min:c_max]
-        self.dec_2d = dec_2d[r_min:r_max, c_min:c_max]
-        flux_2d = self.img[r_min:r_max, c_min:c_max]
 
         # background substraction
         self.flux_2d = flux_2d - self._model_bkg(flux_2d, mask=None)
@@ -306,21 +300,23 @@ class KeplerFFI(object):
 
         return
 
-    def _do_query(self, ra_q, dec_q, rad, epoch):
+    def _do_big_query(self, ra, dec, epoch):
         """
         Query Gaia catalogs (EDR3 default) to obtain sources observed in the FFI.
         If query finishs ok, result will be saved for future use in the following
         directory:
-            ../data/catalogs/ffi/<quarter#>/channel_<channel#_gaia_xmatch.csv
+            ../data/catalogs/ffi/<quarter#>/channel_<channel#>_gaia_xmatch.csv
+
+        It does nx*ny small queries to avoid TimeoutError that might happen when doing
+        large (rad > 0.7 deg) queries to Gaia archive. The ouput file has unique
+        objects.
 
         Parameters
         ----------
-        ra_q : list
+        ra : list
             Value of the Right Ascension coordinate used for the query, in deg.
-        dec_q : list
+        dec : list
             Value of the Declination coordinate used for the query, in deg.
-        rad : list
-            Value of the radius coordinate used for the query, in deg.
         epoch : float
             Year of the observation (Julian year) used for proper motion correction.
 
@@ -338,19 +334,44 @@ class KeplerFFI(object):
             print(file_name)
             sources = pd.read_csv(file_name).drop("Unnamed: 0", axis=1)
         else:
-            try:
-                sources = get_gaia_sources(
-                    tuple(ra_q),
-                    tuple(dec_q),
-                    tuple(rad),
-                    magnitude_limit=18,
-                    epoch=epoch,
-                    dr=3,
-                )
+            # number of cells in the grid to divide the image
+            nx = 4
+            ny = 4
+            stepx = int(self.ra_2d.shape[1] / nx)
+            stepy = int(self.ra_2d.shape[0] / ny)
+            sources = []
+            for x in range(1, nx + 1):
+                for y in range(1, ny + 1):
+                    ra_cell = self.ra_2d[
+                        (y - 1) * stepy : y * stepy, (x - 1) * stepx : x * stepx
+                    ]
+                    dec_cell = self.dec_2d[
+                        (y - 1) * stepy : y * stepy, (x - 1) * stepx : x * stepx
+                    ]
 
-            except (TimeoutError, ConnectionResetError):
-                print("TimeoutError... \nExiting.")
-                sys.exit()
+                    ra_q = np.mean(ra_cell)
+                    dec_q = np.mean(dec_cell)
+                    rad_q = np.hypot(
+                        ra_cell - ra_cell.mean(), dec_cell - dec_cell.mean()
+                    ).max()
+                    print(
+                        "Will do small queries query with this "
+                        + "(ra, dec, radius, epoch): ",
+                        ra_q,
+                        dec_q,
+                        rad_q,
+                        epoch,
+                    )
+                    result = get_gaia_sources(
+                        tuple([ra_q]),
+                        tuple([dec_q]),
+                        tuple([rad_q]),
+                        magnitude_limit=18,
+                        epoch=epoch,
+                        dr=3,
+                    )
+                    sources.append(result)
+            sources = pd.concat(sources, axis=0).drop_duplicates(subset=["designation"])
             print("Saving query to file...")
             print(file_name)
             columns = [
