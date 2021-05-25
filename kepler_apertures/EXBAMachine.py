@@ -2,6 +2,7 @@ import os
 import glob
 import warnings
 import datetime
+import wget
 
 import numpy as np
 import pandas as pd
@@ -20,26 +21,106 @@ from astropy.table import Table
 from astropy.timeseries import BoxLeastSquares
 import lightkurve as lk
 
-from .utils import get_gaia_sources, get_bls_periods
+from .utils import get_gaia_sources
 
 
 class EXBAMachine(object):
-    def __init__(self, channel=53, quarter=5, magnitude_limit=20, gaia_dr=2):
+    """
+    Class that works with Kepler's EXBA data, to identify observed sources using Gaia
+    catalogs, and create light curves from simple aperture photometry.
+    """
 
+    def __init__(self, channel=53, quarter=5, magnitude_limit=20, gaia_dr=3):
+        """
+        Parameters
+        ----------
+        channel : int
+            Channel number of the EXBA image.
+        quarter : int
+            Quarter number of the EXBA image.
+        magnitude_limit : float
+            Limiting magnitude in g band used when querying Gaia catalogs,
+            default is 20 mag.
+        gaia_dr : int
+            Gaia data release, dafult is EDR3.
+
+        Attributes
+        ----------
+        quarter : int
+            Channel number of the EXBA image.
+        channel : int
+            Quarter number of the EXBA image.
+        gaia_dr : int
+            Gaia data release, dafult is EDR3.
+        tpfs : lightkurve.TargetPixelFileCollection
+            Collection of 4 TPFs that form the full EXBA mask.
+        time : numpy.ndarray
+            Data array containing the time values.
+        cadences : numpy.ndarray
+            Data array containing the cadence numbers.
+        row : numpy.ndarray
+            Data array containing the valid pixel row numbers. Has shape of [n_pixels].
+        column : numpy.ndarray
+            Data array containing the valid pixel columns numbers.
+            Has shape of [n_pixels].
+        flux : numpy.ndarray
+            Data array containing the valid image fluxes. Has shape of
+            [n_times, n_pixels].
+        flux_err : numpy.ndarray
+            Data array containing the valid image flux errors. Has shape of
+            [n_times, n_pixels].
+        ra : numpy.ndarray
+            Data array containing the valid RA pixel values. Has shape of [n_pixels].
+        dec : numpy.ndarray
+            Data array containing the valid Dec pixel values. Has shape of [n_pixels].
+        dx : numpy.ndarray
+            Distance between pixel and source coordinates, units of pixels. Has shape
+            of [n_sources, n_pixels]
+        dy : numpy.ndarray
+            Distance between pixel and source coordinates, units of pixels. Has shape
+            of [n_sources, n_pixels]
+        r : numpy.ndarray
+            Radial distance between pixel and source coordinates (polar coordinates),
+            in units of pixels.
+        phi : numpy.ndarray
+            Angle between pixel and source coordinates (polar coordinates),
+            in units of radians
+        n_sources : int
+            Number of sources in Gaia catalog observed in the EXBA mask.
+        n_rows : int
+            Number rows in the EXBA image.
+        n_columns : int
+            Number columns in the EXBA image.
+        aperture_mask : numpy.ndarray
+            Data array with the source aperture masks. Has shape of
+            [n_sources, n_pixels]
+        FLFRCSAP : numpy.array
+            Data array with the completeness metric for every source computed from
+            the photometric aperture.
+        CROWDSAP : numpy.array
+            Data array with the contamination metric for every source computed from
+            the photometric aperture.
+        """
         self.quarter = quarter
         self.channel = channel
         self.gaia_dr = gaia_dr
-        self.__version__ = "0.1.0dev"
 
         # load local TPFs files
         tpfs_paths = np.sort(
             glob.glob(
-                "../data/fits/exba/%s/%s/*_lpd-targ.fits.gz"
-                % (str(quarter), str(channel))
+                "../data/fits/exba/q%i/ch%02i/*_lpd-targ.fits.gz" % (quarter, channel)
             )
         )
         if len(tpfs_paths) == 0:
-            raise FileNotFoundError("No FITS file for this channel/quarter.")
+            print("Downloading TPFs for EXBA mask...")
+            self.download_exba(channel=channel, quarter=quarter)
+            tpfs_paths = np.sort(
+                glob.glob(
+                    "../data/fits/exba/q%i/ch%02i/*_lpd-targ.fits.gz"
+                    % (quarter, channel)
+                )
+            )
+
         self.tpfs_files = tpfs_paths
 
         tpfs = lk.TargetPixelFileCollection(
@@ -70,20 +151,20 @@ class EXBAMachine(object):
         self.time, self.cadences, flux, flux_err = self._preprocess(
             time, cadences, flux, flux_err
         )
-        self.row_2d, self.col_2d, self.flux_2d, self.flux_err_2d = (
+        self.row_2d, self.column_2d, self.flux_2d, self.flux_err_2d = (
             row.copy(),
             col.copy(),
             flux.copy(),
             flux_err.copy(),
         )
-        self.row, self.col, self.flux, self.flux_err, self.unw = (
+        self.row, self.column, self.flux, self.flux_err, self.unw = (
             row.ravel(),
             col.ravel(),
             flux.reshape(flux.shape[0], np.product(flux.shape[1:])),
             flux_err.reshape(flux_err.shape[0], np.product(flux_err.shape[1:])),
             unw.ravel(),
         )
-        self.ra, self.dec = self._convert_to_wcs(tpfs, self.row, self.col)
+        self.ra, self.dec = self._convert_to_wcs(tpfs, self.row, self.column)
 
         # search Gaia sources in the sky
         sources = self._do_query(
@@ -102,13 +183,12 @@ class EXBAMachine(object):
             sources, self.ra, self.dec
         )
 
-        self.dx, self.dy, self.gaia_flux = np.asarray(
+        self.dx, self.dy = np.asarray(
             [
                 np.vstack(
                     [
-                        self.col - self.sources["col"][idx],
+                        self.column - self.sources["col"][idx],
                         self.row - self.sources["row"][idx],
-                        np.zeros(len(self.col)) + self.sources.phot_g_mean_flux[idx],
                     ]
                 )
                 for idx in range(len(self.sources))
@@ -118,9 +198,9 @@ class EXBAMachine(object):
         self.r = np.hypot(self.dx, self.dy)
         self.phi = np.arctan2(self.dy, self.dx)
 
-        self.N_sources = self.sources.shape[0]
-        self.N_row = self.flux_2d.shape[1]
-        self.N_col = self.flux_2d.shape[2]
+        self.n_sources = self.sources.shape[0]
+        self.n_rows = self.flux_2d.shape[1]
+        self.n_columns = self.flux_2d.shape[2]
 
         self.aperture_mask = np.zeros_like(self.dx).astype(bool)
         self.FLFRCSAP = np.zeros(self.sources.shape[0])
@@ -129,21 +209,69 @@ class EXBAMachine(object):
 
     def __repr__(self):
         q_result = ",".join([str(k) for k in list([self.quarter])])
-        return "EXBA Patch:\n\t Channel %i, Quarter %s, Gaia DR %i sources %i" % (
+        return "EXBA Patch:\n\t Channel %i, Quarter %s, Gaia DR%i sources %i" % (
             self.channel,
             q_result,
             self.gaia_dr,
             len(self.sources),
         )
 
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        del state["tpfs"]
-        return state
+    @staticmethod
+    def download_exba(channel=1, quarter=5):
+        """
+        Download EXBA fits file to a dedicated quarter/channel directory
+        It uses a exba_tpfs_info.csv to map the quarter/channel to the corresponding
+        file names in MAST archive.
 
-    # def __setstate__(self, state):
+        Parameters
+        ----------
+        channel : int
+            Number of channel to be download, valid numbers are bwtween 1 and 84.
+        quarter : int
+            Number of quarter to be download, valid numbers are bwtween 1 and 17.
+        """
+        url = "https://archive.stsci.edu/missions/kepler/target_pixel_files/1000"
+        map = pd.read_csv("../res/exba_tpfs_info.csv", index_col=0)
+        file_names = map.query("channel == %i and quarter == %i" % (channel, quarter))
+
+        if not os.path.isdir("../data/fits/exba/q%i/ch%02i" % (quarter, channel)):
+            os.makedirs("../data/fits/exba/q%i/ch%02i" % (quarter, channel))
+
+        for i, row in file_names.iterrows():
+            name = row["file_name"]
+            kid = row["kepler_id"].split(" ")[-1]
+            out = "../data/fits/exba/q%i/ch%02i/%s" % (quarter, channel, name)
+            print("%s/%s/%s" % (url, kid, name))
+            wget.download("%s/%s/%s" % (url, kid, name), out=out)
+
+        return
 
     def _parse_TPFs_channel(self, tpfs):
+        """
+        Function to parse the TPFs containing the EXBA masks (4 per channel) and
+        tile them.
+
+        Parameters
+        ----------
+        tpfs : list of TPFs or TargetPixelFileCollection
+            A list of TPFs that contain the 4 EXBA mask per channel.
+
+        Returns
+        -------
+        times : numpy.ndarray
+            Data array containing the time values.
+        cadences : numpy.ndarray
+            Data array containing the cadence numbers.
+        row : numpy.ndarray
+            Data array containing the pixel row numbers.
+        col : numpy.ndarray
+            Data array containing the pixel column numbers.
+        flux : numpy.ndarray
+            Data array containing the image flux.
+        flux_err : numpy.ndarray
+            Data array containing the image flux errors.
+        """
+
         cadences = np.array([tpf.cadenceno for tpf in tpfs])
         # check if all TPFs has same cadences
         if not np.all(cadences[1:, :] - cadences[-1:, :] == 0):
@@ -185,7 +313,30 @@ class EXBAMachine(object):
 
     def _preprocess(self, times, cadences, flux, flux_err):
         """
-        Clean pixels with nan values and bad cadences.
+        Function to clean pixels with nan values and bad cadences. It Returns the same
+        input arrays but cleaned.
+
+        Parameters
+        ----------
+        times : numpy.ndarray
+            Data array with the time values.
+        cadences : numpy.ndarray
+            Data array with the cadence numbers.
+        flux : numpy.ndarray
+            Data array with the image flux.
+        flux_err : numpy.ndarray
+            Data array with the image flux errors.
+
+        Returns
+        ----------
+        times : numpy.ndarray
+            Data array with the time values.
+        cadences : numpy.ndarray
+            Data array with the cadence numbers.
+        flux : numpy.ndarray
+            Data array with the image flux.
+        flux_err : numpy.ndarray
+            Data array with the image flux errors.
         """
         # Remove cadences with nan flux
         nan_cadences = np.array([np.isnan(im).sum() == 0 for im in flux])
@@ -197,6 +348,24 @@ class EXBAMachine(object):
         return times, cadences, flux, flux_err
 
     def _convert_to_wcs(self, tpfs, row, col):
+        """
+        Function to convert pixel number to RA and Dec values using the WCS solution
+        embedded in the TPFs.
+
+        Parameters
+        ----------
+        tpfs : list of TPFs or TargetPixelFileCollection
+            A list of TPFs that contain the EXBA tiles.
+        row : numpy.ndarray
+            Data aray with the row pixel values to be converted to RA & Dec.
+        col : numpy.ndarray
+            Data aray with the column pixel values to be converted to RA & Dec.
+
+        Returns
+        -------
+        ra : numpy.ndarray
+        dec : numpy.ndarray
+        """
         ra, dec = self.wcs.wcs_pix2world(
             (col - tpfs[0].column), (row - tpfs[0].row), 0.0
         )
@@ -205,17 +374,22 @@ class EXBAMachine(object):
 
     def _do_query(self, ra, dec, epoch=2020, magnitude_limit=20, load=True):
         """
-        Calculate ra, dec coordinates and search radius to query Gaia catalog
+        Calculate ra, dec coordinates and search radius to query Gaia catalog.
 
         Parameters
         ----------
         ra : numpy.ndarray
             Right ascension coordinate of pixels to do Gaia search
-        ra : numpy.ndarray
+        dec : numpy.ndarray
             Declination coordinate of pixels to do Gaia search
         epoch : float
             Epoch of obervation in Julian Days of ra, dec coordinates,
             will be used to propagate proper motions in Gaia.
+        magnitude_limit : int
+            Limiting magnitued for query
+        load : boolean
+            Load or not the saved query. Set to False if want to force to run new
+            queries.
 
         Returns
         -------
@@ -275,12 +449,31 @@ class EXBAMachine(object):
         return sources
 
     def _clean_source_list(self, sources, ra, dec):
+        """
+        Function to clean surces from the catalog removing sources outside the image
+        coverage (allowing for sources up to 4" outside the mask), and to remove
+        blended sources (within 2").
+
+        Parameters
+        ----------
+        sources : pandas.DataFrame
+            Catalog with sources to be removed
+        ra : numpy.ndarray
+            Data array with values of RA for every pixel in the image.
+        dec : numpy.ndarray
+            Data array with values of Dec for every pixel in the image.
+
+        Returns
+        -------
+        sources : pandas.DataFrame
+            Clean catalog
+        """
         # find sources on the image
         inside = (
             (sources.row > self.row.min() - 1.0)
             & (sources.row < self.row.max() + 1.0)
-            & (sources.col > self.col.min() - 1.0)
-            & (sources.col < self.col.max() + 1.0)
+            & (sources.col > self.column.min() - 1.0)
+            & (sources.col < self.column.max() + 1.0)
         )
 
         # find well separated sources
@@ -312,11 +505,20 @@ class EXBAMachine(object):
         return sources, removed_sources
 
     def do_photometry(self, aperture_mask):
+        """
+        Function to do aperture photometry on a set of sources. It creates/update class
+        attributes that contains the SAP flux, errors, and aperture masks.
 
+        Parameters
+        ----------
+        aperture_mask : numpy.ndarray
+            Boolean mask of shape [n_sources, n_pixels] that has the aperture mask
+            to be used to compute photometry for a set of sources.
+        """
         sap = np.zeros((self.sources.shape[0], self.flux.shape[0]))
         sap_e = np.zeros((self.sources.shape[0], self.flux.shape[0]))
 
-        for sidx in tqdm(range(len(aperture_mask)), desc="Simple SAP flux", leave=True):
+        for sidx in tqdm(range(len(aperture_mask)), desc="SAP", leave=True):
             sap[sidx, :] = self.flux[:, aperture_mask[sidx]].sum(axis=1)
             sap_e[sidx, :] = (
                 np.power(self.flux_err[:, aperture_mask[sidx]].value, 2).sum(axis=1)
@@ -327,12 +529,23 @@ class EXBAMachine(object):
         self.sap_flux_err = sap_e
         self.aperture_mask = aperture_mask
         self.aperture_mask_2d = aperture_mask.reshape(
-            self.N_sources, self.N_row, self.N_col
+            self.n_sources, self.n_rows, self.n_columns
         )
 
         return
 
     def create_lcs(self, aperture_mask):
+        """
+        Funciton to create `lightkurve.LightCurve` with the light curves using aperture
+        photometry. It creates a class attribute `self.lcs` that is a
+        `lk.LightCurveCollection` with the light curves of all input sources.
+
+        Parameters
+        ----------
+        aperture_mask : numpy.ndarray
+            Boolean mask of shape [n_sources, n_pixels] that has the aperture mask
+            to be used to compute photometry for a set of sources.
+        """
         self.do_photometry(aperture_mask)
         lcs = []
         for idx, s in self.sources.iterrows():
@@ -374,12 +587,22 @@ class EXBAMachine(object):
         self.lcs = lk.LightCurveCollection(lcs)
         return
 
-    def apply_flatten(self):
-        self.flatten_lcs = lk.LightCurveCollection([lc.flatten() for lc in self.lcs])
-        return
+    def apply_CBV(self, do_under=False, plot=True):
+        """
+        Applies CBV corrections to all the light curves in `self.lcs`. It optimizes
+        the alpha parameter for each correction, if optimization fails, uses the alpha
+        value calculated for previous light curve.
+        It creates class attributes to access the CBV-corrected light curves, and
+        under/over fitting metrics.
 
-    def apply_CBV(self, do_under=False, ignore_warnings=True, plot=True):
-        if ignore_warnings:
+        Parameters
+        ----------
+        do_under : boolean
+            Compute or not the under-fitting metric for the CBV correction.
+        plot : boolean
+            Plot or not CBVcorrector diagnostic figures.
+        """
+        if True:
             warnings.filterwarnings("ignore", category=RuntimeWarning)
             warnings.filterwarnings("ignore", category=lk.LightkurveWarning)
 
@@ -401,7 +624,7 @@ class EXBAMachine(object):
                 sigma_upper=5, sigma_lower=1e20
             )
             cbvcor = lk.correctors.CBVCorrector(lc, interpolate_cbvs=False)
-            if i % 10 == 0:
+            if i % 1 == 0:
                 print("Optimizing alpha")
                 try:
                     cbvcor.correct(
@@ -438,43 +661,30 @@ class EXBAMachine(object):
             self.under_fitting_metrics = np.array(under_fit_m)
         return
 
-    def do_bls_search(self, test_lcs=None, n_boots=100, plot=False):
-
-        if test_lcs:
-            search_here = list(test_lcs) if len(test_lcs) == 1 else test_lcs
-        else:
-            if hasattr(self, "corrected_lcs"):
-                search_here = self.corrected_lcs
-            elif hasattr(self, "flatten_lcs"):
-                print("No CBV correction applied, using flatten light curves.")
-                search_here = self.flatten_lcs
-            else:
-                raise AttributeError(
-                    "No CBV corrected or flatten light curves were computed,"
-                    + " run `apply_CBV()` or `flatten()` first"
-                )
-
-        period_best, period_fap, periods_snr = get_bls_periods(
-            search_here, plot=plot, n_boots=n_boots
-        )
-
-        if test_lcs:
-            return period_best, period_fap, periods_snr
-        else:
-            self.period_df = pd.DataFrame(
-                np.array([period_best, period_fap, periods_snr]).T,
-                columns=["period_best", "period_fap", "period_snr"],
-                index=self.sources.designation.values,
-            )
-        return
-
     def image_to_fits(self, path=None, overwrite=False):
+        """
+        Creates a FITS file that contains the time-average imagege of the EXBA mask
+        in a ImageHDU, and the source catalog in a BinTableHDU.
 
+        Parameters
+        ----------
+        path : string
+            Directory path where to save the FITS file.
+        overwrite : bool
+            Overwrite the output file.
+
+        Returns
+        -------
+        hdu : ImageHDU
+            An Image header unit containing the EXBA flux.
+        """
         primary_hdu = fits.PrimaryHDU(data=None, header=self.tpfs[0].get_header())
-        primary_hdu.header["RA_OBJ"] = self.ra.mean()
-        primary_hdu.header["DEC_OBJ"] = self.dec.mean()
-        primary_hdu.header["ROW_0"] = self.row.min()
-        primary_hdu.header["COL_0"] = self.col.min()
+        phdr = primary_hdu.header
+        phdr.set("OBJECT", "EXBA mask", "type of image")
+        phdr.set("RA_OBJ", self.ra.mean())
+        phdr.set("DEC_OBJ", self.dec.mean())
+        phdr.set("ROW_0", self.row.min(), "reference pixel value, origin top left")
+        phdr.set("COL_0", self.column.min(), "reference pixel value, origin top left")
 
         image_hdu = fits.ImageHDU(data=self.flux_2d.mean(axis=0).value)
         image_hdu.header["TTYPE1"] = "FLUX"
@@ -514,23 +724,32 @@ class EXBAMachine(object):
 
         return hdu_list
 
-    def store_data(self):
-        out_path = os.path.dirname(self.tpfs_files[0])
-        with open("%s/exba_object.pkl" % (out_path), "wb") as f:
-            pickle.dump(self, f)
+    def plot_image(self, frame=0, sources=True, ax=None):
+        """
+        Function to plot the full EXBA image and the Gaia Sources.
 
-        return
+        Parameters
+        ----------
+        frame : int
+            Frame number. The default is 0, i.e. the first frame.
+        sources : boolean
+            Whether to overplot or not the source catalog
+        ax : matplotlib.axes
+            Matlotlib axis can be provided, if not one will be created and returned
 
-    def plot_image(self, sources=True, ax=None):
-
+        Returns
+        -------
+        ax : matplotlib.axes
+            Matlotlib axis with the figure
+        """
         if ax is None:
             fig, ax = plt.subplots(1, figsize=(5, 7))
         ax = plt.subplot(projection=self.wcs)
         ax.set_title("EXBA | Q: %i | Ch: %i" % (self.quarter, self.channel))
         pc = ax.pcolormesh(
-            self.col_2d,
+            self.column_2d,
             self.row_2d,
-            self.flux_2d[0],
+            self.flux_2d[frame],
             shading="auto",
             cmap="viridis",
             norm=colors.SymLogNorm(linthresh=100, vmin=0, vmax=1000, base=10),
@@ -551,11 +770,28 @@ class EXBAMachine(object):
         cbar = fig.colorbar(pc)
         cbar.set_label(label=r"Flux ($e^{-}s^{-1}$)", size=12)
         ax.set_aspect("equal", adjustable="box")
-        # plt.show()
 
         return ax
 
     def plot_stamp(self, source_idx=0, aperture_mask=False, ax=None):
+        """
+        Creates a figure with the "stamp" image of a given source and its aperture
+        mask.
+
+        Parameters
+        ----------
+        source_idx : int
+            Index of the source in `self.sources` catalog to be plotted.
+        aperture_mask : boolean
+            Plot or not the aperutre mask.
+        ax : matplotlib.axes
+            Matlotlib axis can be provided, if not one will be created and returned.
+
+        Returns
+        -------
+        ax : matplotlib.axes
+            Matlotlib axis with the figure
+        """
 
         if isinstance(source_idx, str):
             idx = np.where(self.sources.designation == source_idx)[0][0]
@@ -569,7 +805,7 @@ class EXBAMachine(object):
             norm=colors.SymLogNorm(linthresh=50, vmin=3, vmax=5000, base=10),
         )
         ax.scatter(
-            self.sources.col - self.col.min() + 0.5,
+            self.sources.col - self.column.min() + 0.5,
             self.sources.row - self.row.min() + 0.5,
             s=20,
             facecolors="y",
@@ -577,7 +813,7 @@ class EXBAMachine(object):
             edgecolors="k",
         )
         ax.scatter(
-            self.sources.col.iloc[idx] - self.col.min() + 0.5,
+            self.sources.col.iloc[idx] - self.column.min() + 0.5,
             self.sources.row.iloc[idx] - self.row.min() + 0.5,
             s=25,
             facecolors="r",
@@ -590,8 +826,8 @@ class EXBAMachine(object):
         ax.set_aspect("equal", adjustable="box")
 
         if aperture_mask:
-            for i in range(self.N_row):
-                for j in range(self.N_col):
+            for i in range(self.n_rows):
+                for j in range(self.n_columns):
                     if self.aperture_mask_2d[idx, i, j]:
                         rect = patches.Rectangle(
                             xy=(j, i),
@@ -606,11 +842,11 @@ class EXBAMachine(object):
             zoom = np.argwhere(self.aperture_mask_2d[idx] == True)
             ax.set_ylim(
                 np.maximum(0, zoom[0, 0] - 5),
-                np.minimum(zoom[-1, 0] + 5, self.N_row),
+                np.minimum(zoom[-1, 0] + 5, self.n_rows),
             )
             ax.set_xlim(
                 np.maximum(0, zoom[0, -1] - 5),
-                np.minimum(zoom[-1, -1] + 5, self.N_col),
+                np.minimum(zoom[-1, -1] + 5, self.n_columns),
             )
 
             ax.set_title(
@@ -622,6 +858,22 @@ class EXBAMachine(object):
         return ax
 
     def plot_lightcurve(self, source_idx=0, ax=None):
+        """
+        Creates a figure with the light curve of a given source.
+        mask.
+
+        Parameters
+        ----------
+        source_idx : int
+            Index of the source in `self.sources` catalog to be plotted.
+        ax : matplotlib.axes
+            Matlotlib axis can be provided, if not one will be created and returned.
+
+        Returns
+        -------
+        ax : matplotlib.axes
+            Matlotlib axis with the figure
+        """
         if ax is None:
             fig, ax = plt.subplots(1, figsize=(9, 3))
 
@@ -649,210 +901,3 @@ class EXBAMachine(object):
                 )
 
         return ax
-
-    def plot_lightcurves_stamps(self, which="all", step=1):
-
-        s_list = self.sources.index.values
-        if which != "all":
-            if isinstance(which[0], str):
-                s_list = s_list[np.in1d(self.sources.designation, which)]
-            else:
-                s_list = which
-        for s in s_list[::step]:
-            fig, ax = plt.subplots(
-                1, 2, figsize=(15, 4), gridspec_kw={"width_ratios": [4, 1]}
-            )
-            self.plot_lightcurve(source_idx=s, ax=ax[0])
-            self.plot_stamp(source_idx=s, ax=ax[1], aperture_mask=True)
-
-            plt.show()
-
-        return
-
-
-class EXBALightCurveCollection(object):
-    def __init__(self, lcs, metadata, periods=None):
-        """
-        lcs      : dictionary like
-            Dictionary with data, first leveel is quarter
-        metadata : dictionary like
-            Dictionary with data, first leveel is quarter
-        periods  : dictionary like
-            Dictionary with data, first leveel is quarter
-        """
-
-        # check if each element of exba_quarters are EXBA objects
-        # if not all([isinstance(exba, EXBA) for exba in EXBAs]):
-        #     raise AssertionError("All elements of the list must be EXBA objects")
-
-        self.quarter = np.unique(list(lcs.keys()))
-        self.channel = np.unique([lc.channel for lc in lcs[self.quarter[0]]])
-
-        # check that gaia sources are in all quarters
-        gids = [df.designation.tolist() for q, df in metadata.items()]
-        unique_gids = np.unique([item for sublist in gids for item in sublist])
-
-        # create matris with index position to link sources across quarters
-        # this asume that sources aren't in the same position in the DF, sources
-        # can disapear (fall out the ccd), not all sources show up in all quarters.
-        pm = np.empty((len(unique_gids), len(self.quarter)), dtype=np.int) * np.nan
-        for k, id in enumerate(unique_gids):
-            for i, q in enumerate(self.quarter):
-                pos = np.where(id == metadata[q].designation.values)[0]
-                if len(pos) == 0:
-                    continue
-                else:
-                    pm[k, i] = pos
-        # rearange sources as list of lk Collection containing all quarters per source
-        sources = []
-        for i, gid in enumerate(unique_gids):
-            aux = [
-                lcs[self.quarter[q]][int(pos)]
-                for q, pos in enumerate(pm[i])
-                if np.isfinite(pos)
-            ]
-            sources.append(lk.LightCurveCollection(aux))
-        self.lcs = sources
-        self.metadata = (
-            pd.concat(metadata, axis=0, join="outer")
-            .drop_duplicates(["designation"], ignore_index=True)
-            .drop(["Unnamed: 0", "col", "row"], axis=1)
-            .sort_values("designation")
-            .reset_index(drop=True)
-        )
-        self.periods = (
-            pd.concat(periods, axis=0, join="outer")
-            .drop_duplicates(["designation"], ignore_index=True)
-            .drop(["Unnamed: 0", "col", "row"], axis=1)
-            .sort_values("designation")
-            .reset_index(drop=True)
-        )
-        print(self)
-
-    def __repr__(self):
-        ch_result = ",".join([str(k) for k in list([self.channel])])
-        q_result = ",".join([str(k) for k in list([self.quarter])])
-        return (
-            "Light Curves from: \n\tChannels %s \n\tQuarters %s \n\tGaia sources %i"
-            % (
-                ch_result,
-                q_result,
-                len(self.lcs),
-            )
-        )
-
-    def to_fits(self):
-        """Save all the light curves to fits files..."""
-        raise NotImplementedError
-
-    def stitch_quarters(self):
-
-        # lk.LightCurveCollection.stitch() normalize by default all lcs before stitching
-        if hasattr(self, "source_lcs"):
-            self.stitched_lcs = lk.LightCurveCollection(
-                [lc.stitch() for lc in self.source_lcs]
-            )
-
-        return
-
-    def do_bls_long(self, source_idx=0, plot=True, n_boots=50):
-        if isinstance(source_idx, str):
-            s = np.where(self.metadata.designation == source_idx)[0][0]
-        else:
-            s = source_idx
-        print(self.lcs[s])
-        periods, faps, snrs = get_bls_periods(self.lcs[s], plot=plot, n_boots=n_boots)
-        return periods, faps, snrs
-
-    def do_bls_search_all(self, plot=False, n_boots=100, fap_tresh=0.1, save=True):
-
-        self.metadata["has_planet"] = False
-        self.metadata["N_periodic_quarters"] = 0
-        self.metadata["Period"] = None
-        self.metadata["Period_snr"] = None
-        self.metadata["Period_fap"] = None
-
-        for lc_long in tqdm(self.lcs, desc="Gaia sources"):
-            periods, faps, snrs = get_bls_periods(lc_long, plot=plot, n_boots=n_boots)
-            # check for significant periodicity detection in at least one quarter
-            if np.isfinite(faps).all():
-                p_mask = faps < fap_tresh
-            else:
-                p_mask = snrs > 50
-            if p_mask.sum() > 0:
-                # check that periods are similar, within a tolerance
-                # this assumes that there's one only one period
-                # have to fix this to make it work for multiple true periods detected
-                # or if BLS detected ane of the armonics, not necesary yet, when need it
-                # use np.round(periods) and np.unique() to check for same periods and
-                # harmonics within tolerance.
-                good_periods = periods[p_mask]
-                good_faps = faps[p_mask]
-                good_snrs = snrs[p_mask]
-                all_close = (
-                    np.array(
-                        [np.isclose(p, good_periods, atol=0.1) for p in good_periods]
-                    ).sum(axis=0)
-                    > 1
-                )
-                if all_close.sum() > 1:
-                    idx = np.where(self.metadata.designation == lc_long[0].label)[0]
-                    self.metadata["has_planet"].iloc[idx] = True
-                    self.metadata["N_periodic_quarters"].iloc[idx] = all_close.sum()
-                    self.metadata["Period"].iloc[idx] = good_periods[all_close].mean()
-                    self.metadata["Period_fap"].iloc[idx] = good_faps[all_close].mean()
-                    self.metadata["Period_snr"].iloc[idx] = good_snrs[all_close].mean()
-                # check if periods are harmonics
-            # break
-        if save:
-            cols = [
-                "designation",
-                "source_id",
-                "ref_epoch",
-                "ra",
-                "ra_error",
-                "dec",
-                "dec_error",
-                "has_planet",
-                "N_periodic_quarters",
-                "Period",
-                "Period_snr",
-                "Period_fap",
-            ]
-            if len(self.channel) == 1:
-                ch_str = "%i" % (self.channel[0])
-            else:
-                ch_str = "%i-%i" % (self.channel[0], self.channel[-1])
-            outname = "BLS_results_ch%s.csv" % (ch_str)
-            print("Saving data to --> %s/data/bls_results/%s" % (main_path, outname))
-            self.metadata.loc[:, cols].to_csv(
-                "%s/data/bls_results/%s" % (main_path, outname)
-            )
-
-    @staticmethod
-    def from_stored_lcs(quarters, channels, lc_type="cbv"):
-
-        # load gaia catalogs and lcs
-        metadata, lcs, periods, nodata = {}, {}, {}, []
-        for q in tqdm(quarters, desc="Quarters", leave=True):
-            metadata_, lcs_, periods_ = [], [], []
-            for ch in channels:
-                obj_path = "../data/fits/exba/%i/%i/exba_object.pkl" % (q, ch)
-                if not os.path.isfile(obj_path):
-                    print(
-                        "WARNING: quarter %i channel %i have no storaged files"
-                        % (q, ch)
-                    )
-                    nodata.append([q, ch])
-                    continue
-                exba = pickle.load(open(obj_path, "rb"))
-                #     metadata_.append(exba.sources)
-                #     lcs_.extend(exba.corrected_lcs)
-                periods_.append(exba.period_df)
-            #     del obj_path
-            # metadata[q] = pd.concat(metadata_, axis=0)
-            # lcs[q] = lcs_
-            periods[q] = pd.concat(periods_, axis=0)
-
-        # return EXBALightCurveCollection(lcs, metadata, periods=periods)
-        return periods

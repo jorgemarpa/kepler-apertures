@@ -1130,6 +1130,11 @@ class KeplerFFI(object):
             Matlotlib axis can be provided, if not one will be created and returned
         sources : boolean
             Whether to overplot or not the source catalog
+
+        Returns
+        -------
+        ax : matplotlib.axes
+            Matlotlib axis with the figure
         """
         if ax is None:
             fig, ax = plt.subplots(1, figsize=(10, 10))
@@ -1178,6 +1183,11 @@ class KeplerFFI(object):
         ----------
         ax : matplotlib.axes
             Matlotlib axis can be provided, if not one will be created and returned
+
+        Returns
+        -------
+        ax : matplotlib.axes
+            Matlotlib axis with the figure
         """
         if ax is None:
             fig, ax = plt.subplots(1, figsize=(10, 10))

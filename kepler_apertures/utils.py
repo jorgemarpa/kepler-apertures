@@ -1,4 +1,6 @@
-""" Collection of utility functions"""
+"""
+Collection of utility functions
+"""
 
 import numpy as np
 import functools
