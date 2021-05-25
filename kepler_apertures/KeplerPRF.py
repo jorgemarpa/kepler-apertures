@@ -6,12 +6,13 @@ import os
 import warnings
 
 import numpy as np
-import pickle
+import pandas as pd
 from scipy import sparse
 from scipy.optimize import minimize_scalar
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from matplotlib import patches
+from astropy.io import fits
 
 from .utils import _make_A_polar
 
@@ -24,34 +25,24 @@ class KeplerPRF(object):
     Class to load PRF models computed from FFI, to create photometric apertures
     """
 
-    def __init__(self, quarter: int = 5, channel: int = 1):
+    def __init__(
+        self,
+        prf_ws: np.array,
+        n_r_knots: int = 5,
+        n_phi_knots: int = 15,
+        rmin: float = 0.25,
+        rmax: float = 5,
+    ):
         """
-        Initianization of the KeplerPRF class
+        A KeplerPRF object is build by providing the hyperparameters of the spline
+        model, and the weights of each basis spline. The hyperparameters allow to
+        reconstruct the same basis splines while the weights are used at evaluation of
+        the model in new data.
 
         Parameters
         __________
-        channel : int
-            Channel number of the FFI to be used to model the PRF. Valid values are
-            between 1 and 84.
-        quarter : int
-            Number of the quarter that will be used to model the PRF.
-            Valid values are between 1 and 17.
-
-        Attributes
-        ----------
-        DM : numpy.ndarray
-            Design matrix used during PRF modeling
-        PSF_w : numpy.ndarray
+        prf_w : numpy.ndarray
             Weights corresponding to each basis of the design matrix.
-        x_data : numpy.ndarray
-            Pixel data from the FFI used to fit the PRF model. Here is used to plot
-            the full model.
-        y_data : numpy.ndarray
-            Pixel data from the FFI used to fit the PRF model. Here is used to plot
-            the full model.
-        f_data : numpy.ndarray
-            Pixel data from the FFI used to fit the PRF model. Here is used to plot
-            the full model.
         rmin : float
             The minimum radius for the PRF model to be fit.
         rmax : float
@@ -60,56 +51,73 @@ class KeplerPRF(object):
             Number of radial knots in the spline model.
         n_phi_knots : int
             Number of azimuthal knots in the spline model.
-        r_data : numpy.ndarray
-            Data array with radius values from the FFI data, used to plot the original
-            PRF model
-        phy_data : numpy.ndarray
-            Data array with angle values from the FFI data, used to plot the original
-            PRF model
-        f_model : numpy.ndarray
-            Data array with the PRF model from the FFF data.
+
+        Attributes
+        ----------
+        prf_w : numpy.ndarray
+            Weights corresponding to each basis of the design matrix.
+        rmin : float
+            The minimum radius for the PRF model to be fit.
+        rmax : float
+            The maximum radius for the PRF model to be fit.
+        n_r_knots : int
+            Number of radial knots in the spline model.
+        n_phi_knots : int
+            Number of azimuthal knots in the spline model.
         """
 
+        self.prf_ws = prf_ws
+        self.rmin = rmin
+        self.rmax = rmax
+        self.n_r_knots = n_r_knots
+        self.n_phi_knots = n_phi_knots
+
+    @staticmethod
+    def load_from_file(
+        quarter: int = 5,
+        channel: int = 1,
+    ):
+        """
+        Loads a PRF model build from Kepler's FFI for a given quarter and channel.
+
+        Note: the file with the PRF models is csv file with a multiindex pandas
+        DataFrame, the FITS version is in development.
+
+        Parameters
+        ----------
+        channel : int
+            Channel number of the FFI to be used to model the PRF. Valid values are
+            between 1 and 84.
+        quarter : int
+            Number of the quarter that will be used to model the PRF.
+            Valid values are between 1 and 17.
+
+        Returns
+        -------
+        KeplerPRF : KeplerPRF
+            An object with the PRF model ready to be evaluated in new data.
+        """
         # load PSF model
-        fname = "../data/models/%02i/FFI_quarter%02i_channel_%02i_prf_model.pkl" % (
-            quarter,
-            quarter,
-            channel,
-        )
+        fname = "../res/ffi_prf_models_v0.1.csv"
+        if not os.path.isfile(fname):
+            raise FileNotFoundError("No PSF files: ", fname)
 
-        if os.path.isfile(fname):
-            psf = pickle.load(open(fname, "rb"))
-        else:
-            raise FileNotFoundError("No PSF files")
-        # load PSF edge model
-        fname = output = "../data/models/%i/channel_%02i_psf_edge_model_%s.pkl" % (
-            quarter,
-            channel,
-            "rf-quadratic",
-        )
-        if os.path.isfile(fname):
-            psf_edge = pickle.load(open(fname, "rb"))
-        else:
-            raise FileNotFoundError("No PSF edge file")
+        try:
+            tab = pd.read_csv(fname, index_col=0, header=[0, 1])
+            n_r_knots = int(tab.loc[channel, (str(quarter), "n_r_knots")])
+            n_phi_knots = int(tab.loc[channel, (str(quarter), "n_phi_knots")])
+            rmin = int(tab.loc[channel, (str(quarter), "rmin")])
+            rmax = int(tab.loc[channel, (str(quarter), "rmax")])
+            prf_ws = tab.loc[channel, str(quarter)].iloc[4:].values
 
-        self.DM = psf["design_matrix"]
-        self.PSF_w = psf["psf_w"]
-        self.x_data = psf["x_data"]
-        self.y_data = psf["y_data"]
-        self.f_data = psf["f_data"]  # in log
-        self.rmin = psf["rmin"]
-        self.rmax = psf["rmax"]
-        self.n_r_knots = psf["n_r_knots"]
-        self.n_phi_knots = psf["n_phi_knots"]
+        except KeyError:
+            raise IOError(
+                "Quarter %i and channel %i has no PRF model data" % (quarter, channel)
+            )
 
-        self.r_data = np.hypot(self.x_data, self.y_data)
-        self.phy_data = np.arctan2(self.y_data, self.x_data)
+        return KeplerPRF(prf_ws, n_r_knots, n_phi_knots, rmin, rmax)
 
-        self.f_model = self.DM.dot(self.PSF_w)  # in log
-
-        # self.psf_edge_model = psf_edge["polifit_results"]
-
-    def evaluate_PSF(self, dx, dy, gf):
+    def evaluate_PSF(self, dx, dy):
         """
         Function to evaluate the PRF model in a grid of data. THe function returns
         a the prediction of the model as normalized flux. The model is evaluated in
@@ -129,12 +137,7 @@ class KeplerPRF(object):
         """
         r = np.hypot(dx, dy)
         phi = np.arctan2(dy, dx)
-
-        # r_lim = np.polyval(self.psf_edge_model, np.log10(gf)) * 3.0
-        # r_lim[r_lim < 1.1] = 1.1
-        # r_lim[r_lim > 7] = 7
-        # source_mask = r < 6.0  # r_lim[:, None]
-        source_mask = r <= 7
+        source_mask = r <= np.floor(self.rmax)
 
         phi[phi >= np.pi] = np.pi - 1e-6
 
@@ -158,7 +161,7 @@ class KeplerPRF(object):
             )
 
         source_model = sparse.csr_matrix(r.shape)
-        m = 10 ** dm.dot(self.PSF_w)
+        m = 10 ** dm.dot(self.prf_ws)
         source_model[source_mask] = m
         source_model.eliminate_zeros()
         # psf_models = source_model.multiply(1 / source_model.sum(axis=1)).tocsr()
@@ -415,60 +418,60 @@ class KeplerPRF(object):
 
         return penalty
 
-    def plot_mean_PSF(self, ax=None):
-        """
-        Function to plot the PRF model as created from the FFI. This is only for
-        illustration purposes.
-
-        Parameters
-        ----------
-        ax : matplotlib.axes
-            Matlotlib axis can be provided, if not one will be created and returned
-
-        Returns
-        -------
-        ax : matplotlib.axes
-            Matlotlib axis with the figure
-        """
-        if not hasattr(self, "x_data"):
-            raise AttributeError("Class doesn't have attributes to plot PSF model")
-
-        if ax is None:
-            fig, ax = plt.subplots(1, 2, figsize=(8, 3))
-        vmin = -0.5
-        vmax = -3
-        cax = ax[0].scatter(
-            self.x_data,
-            self.y_data,
-            c=self.f_data,
-            marker=".",
-            s=2,
-            vmin=vmin,
-            vmax=vmax,
-        )
-        fig.colorbar(cax, ax=ax[0])
-        ax[0].set_title("Data mean flux")
-        ax[0].set_ylabel("dy")
-        ax[0].set_xlabel("dx")
-
-        cax = ax[1].scatter(
-            self.x_data,
-            self.y_data,
-            c=self.f_model,
-            marker=".",
-            s=2,
-            vmin=vmin,
-            vmax=vmax,
-        )
-        fig.colorbar(cax, ax=ax[1])
-        ax[1].set_title("Average PSF Model")
-        ax[1].set_xlabel("dx")
-
-        return ax
+    # def plot_mean_PSF(self, ax=None):
+    #     """
+    #     Function to plot the PRF model as created from the FFI. This is only for
+    #     illustration purposes.
+    #
+    #     Parameters
+    #     ----------
+    #     ax : matplotlib.axes
+    #         Matlotlib axis can be provided, if not one will be created and returned
+    #
+    #     Returns
+    #     -------
+    #     ax : matplotlib.axes
+    #         Matlotlib axis with the figure
+    #     """
+    #     if not hasattr(self, "x_data"):
+    #         raise AttributeError("Class doesn't have attributes to plot PSF model")
+    #
+    #     if ax is None:
+    #         fig, ax = plt.subplots(1, 2, figsize=(8, 3))
+    #     vmin = -0.5
+    #     vmax = -3
+    #     cax = ax[0].scatter(
+    #         self.x_data,
+    #         self.y_data,
+    #         c=self.f_data,
+    #         marker=".",
+    #         s=2,
+    #         vmin=vmin,
+    #         vmax=vmax,
+    #     )
+    #     fig.colorbar(cax, ax=ax[0])
+    #     ax[0].set_title("Data mean flux")
+    #     ax[0].set_ylabel("dy")
+    #     ax[0].set_xlabel("dx")
+    #
+    #     cax = ax[1].scatter(
+    #         self.x_data,
+    #         self.y_data,
+    #         c=self.f_model,
+    #         marker=".",
+    #         s=2,
+    #         vmin=vmin,
+    #         vmax=vmax,
+    #     )
+    #     fig.colorbar(cax, ax=ax[1])
+    #     ax[1].set_title("Average PSF Model")
+    #     ax[1].set_xlabel("dx")
+    #
+    #     return ax
 
     def plot_aperture(self, flux, mask=None, ax=None, log=False):
         """
-        FUnction to plot the photometric aperture for a given source.
+        Function to plot the photometric aperture for a given source.
 
         Parameters
         ----------
@@ -492,13 +495,11 @@ class KeplerPRF(object):
         pc = ax.pcolor(
             flux,
             shading="auto",
-            norm=colors.SymLogNorm(linthresh=50, vmin=0, vmax=2000, base=10)
-            if log
-            else None,
+            norm=colors.LogNorm() if log else None,
         )
         plt.colorbar(pc, label="", fraction=0.038, ax=ax)
         ax.set_aspect("equal", adjustable="box")
-        ax.set_title("PSF evaluation")
+        ax.set_title("")
         if mask is not None:
             for i in range(flux.shape[0]):
                 for j in range(flux.shape[1]):
