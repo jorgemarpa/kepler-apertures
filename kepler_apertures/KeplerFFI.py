@@ -698,18 +698,6 @@ class KeplerFFI(object):
         source_mask = sparse.vstack(source_mask, "csr")
         self.source_mask = source_mask
 
-        if self.save:
-            to_save = dict(w=w, polifit_results=polifit_results)
-            output = "../data/models/%s/channel_%02i_psf_edge_model_%s.pkl" % (
-                str(self.quarter),
-                self.channel,
-                dm_type,
-            )
-            if not os.path.isdir("../data/models/%s" % str(self.quarter)):
-                os.makedirs("../data/models/%s" % str(self.quarter))
-            with open(output, "wb") as file:
-                pickle.dump(to_save, file)
-
         if plot:
             fig, ax = plt.subplots(1, 2, figsize=(14, 5), facecolor="white")
 

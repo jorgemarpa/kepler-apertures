@@ -6,7 +6,6 @@ import wget
 
 import numpy as np
 import pandas as pd
-import pickle
 from scipy import sparse
 import matplotlib.pyplot as plt
 from matplotlib import colors

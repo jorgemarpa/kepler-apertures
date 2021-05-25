@@ -9,7 +9,6 @@ from scipy import sparse
 from patsy import dmatrix
 from tqdm import tqdm
 import pyia
-from astroquery.gaia import Gaia  # GaiaClass, TapPlus
 import matplotlib.pyplot as plt
 
 from astropy import units
@@ -55,7 +54,6 @@ def get_gaia_sources(ras, decs, rads, magnitude_limit=18, epoch=2020, dr=2):
         rads = [rads]
 
     # Gaia = GaiaClass(TapPlus(url="http://gaia.ari.uni-heidelberg.de/tap"))
-    Gaia.login(user="jmarti06", password="Antares24.10")
 
     wheres = [
         f"""1=CONTAINS(
