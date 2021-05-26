@@ -2,6 +2,7 @@
 .python-version
 /data
 /dist
+site/
 
 src/kepler_apertures/__pycache__/
 src/kepler_apertures/*.lprof
