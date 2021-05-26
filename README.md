@@ -5,7 +5,7 @@ Full Frame Images.
 
 # PRF models
 
-First we create PRF models using Kepler's FFI which contains ~10k-20k Gaia DR2 sources per Kepler's channel.
+First we create PRF models using Kepler's FFI which contains ~10k Gaia EDR3 sources per Kepler's channel.
 
 The following figure shows the PRF models in the focal plane. Channels at the border shows PRFs with very distorted shapes, while in the center these are round and smooth.
 
