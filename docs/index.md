@@ -31,7 +31,7 @@ We created PRF models using Kepler's FFI which contains ~10k Gaia EDR3 sources p
 
 The following figure shows the PRF models in the focal plane. Channels at the border show PRFs with very distorted shapes, while in the center these are round and smooth.
 
-![PRF Models](https://github.com/jorgemarpa/kepler-apertures/blob/paper-release/docs/focal_plane_prf_model.png)
+![PRF Models](focal_plane_prf_model.png)
 
 Later this PRF models are used to compute apertures photometry.
 
@@ -41,15 +41,15 @@ The EXBA masks are custom apertures observed by Kepler's first mission, they cov
 
 Here an example of the full EXBA mask observed in quarter 5 with channel 48
 
-![exba_ch48](https://github.com/jorgemarpa/kepler-apertures/blob/paper-release/docs/EXBA_img_q5_ch48.png)
+![exba_ch48](EXBA_img_q5_ch48.png)
 
 ## EXBA Light Curves
 
 Here two examples of light curves produced with `kepler-apertures` of sources found in the
 EXBA mask
 
-![ebs](https://github.com/jorgemarpa/kepler-apertures/blob/paper-release/docs/ebs.png)
-![cand](https://github.com/jorgemarpa/kepler-apertures/blob/paper-release/docs/g304.png)
+![ebs](ebs.png)
+![cand](g304_lc.png)
 
 # What can I use it on?
 

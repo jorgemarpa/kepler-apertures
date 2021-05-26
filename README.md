@@ -11,7 +11,7 @@ The following figure shows the PRF models in the focal plane. Channels at the bo
 
 ![PRF Models](https://github.com/jorgemarpa/kepler-apertures/blob/paper-release/docs/focal_plane_prf_model.png)
 
-Later this PRF models are used to compute optimal apertures to perform photometry.
+Later this PRF models are used to compute apertures photometry.
 
 # Kepler's EXBA masks
 
