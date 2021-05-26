@@ -1,5 +1,8 @@
 # Kepler Apertures
 
+Take me to the [documentation](https://jorgemarpa.github.io/kepler-apertures/).
+Paper coming soon!
+
 Tools to create aperture mask for Kepler sources using PRF models build from Kepler's
 Full Frame Images.
 
@@ -9,7 +12,7 @@ First we create PRF models using Kepler's FFI which contains ~10k Gaia EDR3 sour
 
 The following figure shows the PRF models in the focal plane. Channels at the border shows PRFs with very distorted shapes, while in the center these are round and smooth.
 
-![PRF Models](https://github.com/jorgemarpa/kepler-apertures/blob/paper-release/docs/focal_plane_prf_model.png)
+![PRF Models](https://github.com/jorgemarpa/kepler-apertures/blob/main/docs/focal_plane_prf_model.png)
 
 Later this PRF models are used to compute apertures photometry.
 
@@ -19,7 +22,7 @@ The EXBA masks are custom apertures observed by Kepler's first mission, they cov
 
 Here an example of the full EXBA mask observed in quarter 5 with channel 48
 
-![exba_ch48](https://github.com/jorgemarpa/kepler-apertures/blob/paper-release/docs/EXBA_img_q5_ch48.png)
+![exba_ch48](https://github.com/jorgemarpa/kepler-apertures/blob/main/docs/EXBA_img_q5_ch48.png)
 
 # Dependencies
 * numpy
