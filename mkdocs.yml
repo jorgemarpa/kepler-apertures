@@ -5,8 +5,8 @@ nav:
     - KeplerPRF : KeplerPRF.md
     - EXBAMachine : EXBAMachine.md
     - PRF tutorial : tutorials/create_PRF_tutorial.ipynb
-    - Aperture tutorial : tutorials/exba_lcf_readme.ipynb
-    - EXBA Light Curve tutorial: tutorials/using_PRF_on_exba.ipynb
+    - Aperture tutorial : tutorials/using_PRF_on_exba.ipynb
+    - EXBA Light Curve tutorial: tutorials/exba_lcf_readme.ipynb
 theme:
   name: "material"
 repo_url: https://github.com/jorgemarpa/kepler-apertures
