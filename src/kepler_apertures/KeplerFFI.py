@@ -633,18 +633,19 @@ class KeplerFFI(object):
 
         Parameters
         ----------
-        upper_radius_limit: float
+        upper_radius_limit : float
             The radius limit at which we assume there is no flux from a source of any
-            brightness (arcsec)
-        lower_radius_limit: float
+            brightness (arcsec).
+        lower_radius_limit : float
             The radius limit at which we assume there is flux from a source of any
-            \brightness (arcsec)
-        upper_flux_limit: float
-            The flux at which we assume as source is saturated
-        lower_flux_limit: float
+            brightness (arcsec).
+        flux_cut_off : float
             The flux at which we assume a source is too faint to model
-        plot: bool
-            Whether to show diagnostic plot. Default is False
+        dm_type : string
+            Type of design matrix to be used for modeling. Default is `rf-quadratic`,
+            which is quadratic in both radius and flux.
+        plot : bool
+            Whether to show diagnostic plot. Default is False.
         """
         r = self.r
         mean_flux = self.dflux

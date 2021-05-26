@@ -337,7 +337,7 @@ class EXBAMachine(object):
             Data array with the image flux errors.
 
         Returns
-        ----------
+        -------
         times : numpy.ndarray
             Data array with the time values.
         cadences : numpy.ndarray
@@ -373,7 +373,9 @@ class EXBAMachine(object):
         Returns
         -------
         ra : numpy.ndarray
+            Right Ascension coordinate obtained from the WCS solution.
         dec : numpy.ndarray
+            Declination coordinate obtained from the WCS solution.
         """
         ra, dec = self.wcs.wcs_pix2world(
             (col - tpfs[0].column), (row - tpfs[0].row), 0.0

@@ -42,7 +42,7 @@ class KeplerPRF(object):
 
         Parameters
         __________
-        prf_w : numpy.ndarray
+        prf_ws : numpy.ndarray
             Weights corresponding to each basis of the design matrix.
         rmin : float
             The minimum radius for the PRF model to be fit.

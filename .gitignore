@@ -1,6 +1,7 @@
 .DS_Store
 .python-version
 /data
+/dist
 
 src/kepler_apertures/__pycache__/
 src/kepler_apertures/*.lprof
