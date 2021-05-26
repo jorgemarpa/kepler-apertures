@@ -1,0 +1,1779 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.5">
+    
+    
+      
+        <title>KeplerFFI - PSFMachine</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.bde7dde4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ef6f36e2.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    <script>function __prefix(e){return new URL("..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#documentation-for-keplerffi" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="PSFMachine" class="md-header__button md-logo" aria-label="PSFMachine" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PSFMachine
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              KeplerFFI
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        
+<a href="https://github.com/jorgemarpa/kepler-apertures/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="PSFMachine" class="md-nav__button md-logo" aria-label="PSFMachine" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    PSFMachine
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/jorgemarpa/kepler-apertures/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          KeplerFFI
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        KeplerFFI
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI" class="md-nav__link">
+    kepler_apertures.KeplerFFI.KeplerFFI
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._build_prf_shape" class="md-nav__link">
+    _build_prf_shape()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._clean_source_list" class="md-nav__link">
+    _clean_source_list()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._create_sparse" class="md-nav__link">
+    _create_sparse()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._do_big_query" class="md-nav__link">
+    _do_big_query()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._get_mean_model" class="md-nav__link">
+    _get_mean_model()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._get_source_mask" class="md-nav__link">
+    _get_source_mask()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._get_uncontaminated_source_mask" class="md-nav__link">
+    _get_uncontaminated_source_mask()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._mask_bright_sources" class="md-nav__link">
+    _mask_bright_sources()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._model_bkg" class="md-nav__link">
+    _model_bkg()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._saturated_pixels_mask" class="md-nav__link">
+    _saturated_pixels_mask()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI.build_prf_model" class="md-nav__link">
+    build_prf_model()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI.download_ffi" class="md-nav__link">
+    download_ffi()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI.fit_model" class="md-nav__link">
+    fit_model()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI.plot_image" class="md-nav__link">
+    plot_image()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI.plot_pixel_masks" class="md-nav__link">
+    plot_pixel_masks()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI.plot_prf_shape" class="md-nav__link">
+    plot_prf_shape()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI.save_model" class="md-nav__link">
+    save_model()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../KeplerPRF/" class="md-nav__link">
+        KeplerPRF
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EXBAMachine/" class="md-nav__link">
+        EXBAMachine
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI" class="md-nav__link">
+    kepler_apertures.KeplerFFI.KeplerFFI
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._build_prf_shape" class="md-nav__link">
+    _build_prf_shape()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._clean_source_list" class="md-nav__link">
+    _clean_source_list()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._create_sparse" class="md-nav__link">
+    _create_sparse()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._do_big_query" class="md-nav__link">
+    _do_big_query()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._get_mean_model" class="md-nav__link">
+    _get_mean_model()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._get_source_mask" class="md-nav__link">
+    _get_source_mask()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._get_uncontaminated_source_mask" class="md-nav__link">
+    _get_uncontaminated_source_mask()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._mask_bright_sources" class="md-nav__link">
+    _mask_bright_sources()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._model_bkg" class="md-nav__link">
+    _model_bkg()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI._saturated_pixels_mask" class="md-nav__link">
+    _saturated_pixels_mask()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI.build_prf_model" class="md-nav__link">
+    build_prf_model()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI.download_ffi" class="md-nav__link">
+    download_ffi()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI.fit_model" class="md-nav__link">
+    fit_model()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI.plot_image" class="md-nav__link">
+    plot_image()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI.plot_pixel_masks" class="md-nav__link">
+    plot_pixel_masks()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI.plot_prf_shape" class="md-nav__link">
+    plot_prf_shape()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.KeplerFFI.KeplerFFI.save_model" class="md-nav__link">
+    save_model()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/jorgemarpa/kepler-apertures/edit/master/docs/KeplerFFI.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="documentation-for-keplerffi">Documentation for <code>KeplerFFI</code></h1>
+
+
+  <div class="doc doc-object doc-class">
+
+<a id="kepler_apertures.KeplerFFI.KeplerFFI"></a>
+    <div class="doc doc-contents first">
+
+      <p>Class for loading Kepler's FFI files and compute PRF models out of them following</p>
+<p>the method discussed in Hedges et al. 2021 and Martinez-Palomera et al. 2021.</p>
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI.__init__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ffi_name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">quarter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Initialization of the KeplerFFI class</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>ffi_name</code></td>
+        <td><code>str</code></td>
+        <td><p>Name of the FFI file used to model the PRF profile. Either ffi_name or
+quarter can be provided.</p></td>
+        <td><code>&#39;&#39;</code></td>
+      </tr>
+      <tr>
+        <td><code>channel</code></td>
+        <td><code>int</code></td>
+        <td><p>Channel number of the FFI to be used to model the PRF. Valid values are
+between 1 and 84.</p></td>
+        <td><code>1</code></td>
+      </tr>
+      <tr>
+        <td><code>quarter</code></td>
+        <td><code>int</code></td>
+        <td><p>Number of the quarter that will be used to model the PRF.
+Either ffi_name or quarter can be provided, if quarter is provided,
+then all FFI files observed during the time window of that quarter will
+be used to model the PRF by averaging the images.
+Valid values are between 1 and 17.</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>plot</code></td>
+        <td><code>bool</code></td>
+        <td><p>Whether to clreate diagnostic plots or not.</p></td>
+        <td><code>True</code></td>
+      </tr>
+      <tr>
+        <td><code>save</code></td>
+        <td><code>bool</code></td>
+        <td><p>Whether to save the models or not.</p></td>
+        <td><code>True</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Attributes:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>channel</code></td>
+        <td><code>int</code></td>
+        <td><p>Number of the quarter that will be used to model the PRF.</p></td>
+      </tr>
+      <tr>
+        <td><code>quarter</code></td>
+        <td><code>int</code></td>
+        <td><p>Channel number of the FFI to be used to model the PRF.</p></td>
+      </tr>
+      <tr>
+        <td><code>plot</code></td>
+        <td><code>bool</code></td>
+        <td><p>Boolean to create diagnostic plots.</p></td>
+      </tr>
+      <tr>
+        <td><code>save</code></td>
+        <td><code>bool</code></td>
+        <td><p>Boolean to save models and figures.</p></td>
+      </tr>
+      <tr>
+        <td><code>hdr</code></td>
+        <td><code>dict</code></td>
+        <td><p>Header dictionary of the FFI file.</p></td>
+      </tr>
+      <tr>
+        <td><code>img</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Original FFI flux image in electros / sec.</p></td>
+      </tr>
+      <tr>
+        <td><code>wcs</code></td>
+        <td><code>astropy.WCS</code></td>
+        <td><p>Object with the WCS solution of the image.</p></td>
+      </tr>
+      <tr>
+        <td><code>col_2d</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with the pixel column number in 2D</p></td>
+      </tr>
+      <tr>
+        <td><code>row_2d</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with the pixel row number in 2D</p></td>
+      </tr>
+      <tr>
+        <td><code>ra_2d</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with the pixel Right Ascension value in 2D, in degs</p></td>
+      </tr>
+      <tr>
+        <td><code>dec_2d</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with the pixel Declination value in 2D, in degs</p></td>
+      </tr>
+      <tr>
+        <td><code>flux_2d</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with the flux value of each pixel with substracted background
+in 2D, in electros / sec.</p></td>
+      </tr>
+      <tr>
+        <td><code>sources</code></td>
+        <td><code>pandas.DataFrame</code></td>
+        <td><p>Catalog with Gaia sources observed in the image, after cleaning.</p></td>
+      </tr>
+      <tr>
+        <td><code>flux</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with the flux value of each pixel with substracted background
+in 1D after removing saturated &amp; bright pixels. in electros / sec.</p></td>
+      </tr>
+      <tr>
+        <td><code>flux_err</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with the flux error value of each pixel with substracted
+background in 1D after removing saturated &amp; bright pixels. in electros / sec.</p></td>
+      </tr>
+      <tr>
+        <td><code>col</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with the pixel column number in 1D after removing saturated &amp;
+bright pixels</p></td>
+      </tr>
+      <tr>
+        <td><code>row</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with the pixel row number in 1D after removing saturated &amp;
+bright pixels</p></td>
+      </tr>
+      <tr>
+        <td><code>nsurces</code></td>
+        <td><code>int</code></td>
+        <td><p>Total number of sources observed in the image after cleaning.</p></td>
+      </tr>
+      <tr>
+        <td><code>npixels</code></td>
+        <td><code>int</code></td>
+        <td><p>Total number of pixels in the image</p></td>
+      </tr>
+      <tr>
+        <td><code>gf</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with the Gaia flux value for every source.</p></td>
+      </tr>
+      <tr>
+        <td><code>dflux</code></td>
+        <td><code>scipy.sparse.csr_matrix</code></td>
+        <td><p>Sparse matrix with pixel flux value within r &lt; 7 pixels of the source
+coordinates. Has shape [nsources , npixels]</p></td>
+      </tr>
+      <tr>
+        <td><code>dx</code></td>
+        <td><code>scipy.sparse.csr_matrix</code></td>
+        <td><p>Sparse matrix with distance between the pixel within r &lt; 7 pixels and the
+source location, in pixel units. Has shape [nsources , npixels]</p></td>
+      </tr>
+      <tr>
+        <td><code>dy</code></td>
+        <td><code>scipy.sparse.csr_matrix</code></td>
+        <td><p>Sparse matrix with distance between the pixel within r &lt; 7 pixels and the
+source location, in pixel units. Has shape [nsources , npixels]</p></td>
+      </tr>
+      <tr>
+        <td><code>r</code></td>
+        <td><code>scipy.sparse.csr_matrix</code></td>
+        <td><p>Sparse matrix with radial distance between pixels within r &lt; 7 and the
+source location, in polar coordinates. Has shape [nsources , npixels]</p></td>
+      </tr>
+      <tr>
+        <td><code>phi</code></td>
+        <td><code>scipy.sparse.csr_matrix</code></td>
+        <td><p>Sparse matrix with angle value of pixels within r &lt; 7 and the
+source location, in polar coordinates. Has shape [nsources , npixels]</p></td>
+      </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI._build_prf_shape" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_build_prf_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_r_knots</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">n_phi_knots</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">cut_r</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">flux_cut_off</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-private"><code>private</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Builds a sparse model matrix of shape nsources x npixels to be used when</p>
+<p>fitting each source pixels to estimate its PSF photometry</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>n_r_knots</code></td>
+        <td><code>int</code></td>
+        <td><p>Number of radial knots in the spline model.</p></td>
+        <td><code>10</code></td>
+      </tr>
+      <tr>
+        <td><code>n_phi_knots</code></td>
+        <td><code>int</code></td>
+        <td><p>Number of azimuthal knots in the spline model.</p></td>
+        <td><code>12</code></td>
+      </tr>
+      <tr>
+        <td><code>cut_r</code></td>
+        <td><code>int</code></td>
+        <td><p>Distance at which the spline Design matrix has only dependency in the
+radial axis.</p></td>
+        <td><code>6</code></td>
+      </tr>
+      <tr>
+        <td><code>flux_cut_off</code></td>
+        <td><code>float</code></td>
+        <td><p>The flux in COUNTS at which to stop evaluating the model.</p></td>
+        <td><code>1</code></td>
+      </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI._clean_source_list" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_clean_source_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sources</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-private"><code>private</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Function to clean surces from the catalog removing sources near the borders,</p>
+<p>with 10 pixel tolerance, and to remove blended sources (within 8")</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>sources</code></td>
+        <td><code>pandas.DataFrame</code></td>
+        <td><p>Catalog with sources to be removed</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>pandas.DataFrame</code></td>
+      <td><p>Clean catalog</p></td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI._create_sparse" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_create_sparse</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-private"><code>private</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Function to create sparse matrces (scipy.sparse.csr_matrix) for variables:</p>
+<p>dx, dy, dflux, dfluxerr, r, and phy
+This is extremelly necessary for FFI due to the large number of sources (~10k)
+and pixels (~1.1M). The sparse matrices contain the pixel data around the
+sources up to 7 pixels distance from the object location.</p>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI._do_big_query" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_do_big_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">epoch</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-private"><code>private</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Query Gaia catalogs (EDR3 default) to obtain sources observed in the FFI.</p>
+<p>If query finishs ok, result will be saved for future use in the following
+directory:
+    ../data/catalogs/ffi/<quarter#>/channel_<channel#>_gaia_xmatch.csv</p>
+<p>It does nx*ny small queries to avoid TimeoutError that might happen when doing
+large (rad &gt; 0.7 deg) queries to Gaia archive. The ouput file has unique
+objects.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>ra</code></td>
+        <td><code>list</code></td>
+        <td><p>Value of the Right Ascension coordinate used for the query, in deg.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>dec</code></td>
+        <td><code>list</code></td>
+        <td><p>Value of the Declination coordinate used for the query, in deg.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>epoch</code></td>
+        <td><code>float</code></td>
+        <td><p>Year of the observation (Julian year) used for proper motion correction.</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>pandas.DataFrame</code></td>
+      <td><p>Clean catalog</p></td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI._get_mean_model" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_get_mean_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-private"><code>private</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Convenience function to make the scene PRF model</p>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI._get_source_mask" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_get_source_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">upper_radius_limit</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">lower_radius_limit</span><span class="o">=</span><span class="mf">1.1</span><span class="p">,</span> <span class="n">flux_cut_off</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">dm_type</span><span class="o">=</span><span class="s1">&#39;rf-quadratic&#39;</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-private"><code>private</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Find the pixel mask that identifies pixels with contributions from ANY NUMBER</p>
+<p>of Sources.
+Fits a simple polynomial model to the log of the pixel flux values, in radial
+dimension and source flux, to find the optimum circular apertures for every
+source.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>upper_radius_limit</code></td>
+        <td><code>float</code></td>
+        <td><p>The radius limit at which we assume there is no flux from a source of any
+brightness (arcsec).</p></td>
+        <td><code>7</code></td>
+      </tr>
+      <tr>
+        <td><code>lower_radius_limit</code></td>
+        <td><code>float</code></td>
+        <td><p>The radius limit at which we assume there is flux from a source of any
+brightness (arcsec).</p></td>
+        <td><code>1.1</code></td>
+      </tr>
+      <tr>
+        <td><code>flux_cut_off</code></td>
+        <td><code>float</code></td>
+        <td><p>The flux at which we assume a source is too faint to model</p></td>
+        <td><code>300</code></td>
+      </tr>
+      <tr>
+        <td><code>dm_type</code></td>
+        <td><code>string</code></td>
+        <td><p>Type of design matrix to be used for modeling. Default is <code>rf-quadratic</code>,
+which is quadratic in both radius and flux.</p></td>
+        <td><code>&#39;rf-quadratic&#39;</code></td>
+      </tr>
+      <tr>
+        <td><code>plot</code></td>
+        <td><code>bool</code></td>
+        <td><p>Whether to show diagnostic plot. Default is False.</p></td>
+        <td><code>False</code></td>
+      </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI._get_uncontaminated_source_mask" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_get_uncontaminated_source_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-private"><code>private</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>creates a mask of shape nsources x npixels where targets are not contaminated.</p>
+<p>This mask is used to select pixels to build the PSF model.</p>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI._mask_bright_sources" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_mask_bright_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">mag_limit</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-private"><code>private</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Finds and removes halos produced by bright stars (&lt;10 mag)</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>flux</code></td>
+        <td><code>numpu.ndarray</code></td>
+        <td><p>Data array with pixel flux value</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>column</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with pixel column value</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>row</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with pixel row value</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>sources</code></td>
+        <td><code>pandas.DataFrame</code></td>
+        <td><p>Catalog wih observed sources in the image</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>mag_limit</code></td>
+        <td><code>foat</code></td>
+        <td><p>Magnitude limit at which bright sources are identified.</p></td>
+        <td><code>10</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>numpy.ndarray</code></td>
+      <td><p>Boolean mask with rejected pixels</p></td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI._model_bkg" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_model_bkg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-private"><code>private</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>BkgZoomInterpolator:</p>
+<p>This class generates full-sized background and background RMS images
+from lower-resolution mesh images using the <code>~scipy.ndimage.zoom</code>
+(spline) interpolator.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>data</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data arra with the pixel flux values.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>mask</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Boolean array to mask pixels with sources.</p></td>
+        <td><code>None</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>numpy.ndarray</code></td>
+      <td><p>Data array with background model</p></td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI._saturated_pixels_mask" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_saturated_pixels_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">saturation_limit</span><span class="o">=</span><span class="mf">150000.0</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-private"><code>private</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Finds and removes saturated pixels, including bleed columns.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>flux</code></td>
+        <td><code>numpu.ndarray</code></td>
+        <td><p>Data array with pixel flux value</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>column</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with pixel column value</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>row</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with pixel row value</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>saturation_limit</code></td>
+        <td><code>foat</code></td>
+        <td><p>Saturation limit at which pixels are removed.</p></td>
+        <td><code>150000.0</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>numpy.ndarray</code></td>
+      <td><p>Boolean mask with rejected pixels</p></td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI.build_prf_model" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">build_prf_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_r_knots</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">n_phi_knots</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span></code>
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Function that creates a PRF shape using the sources. In combines all other</p>
+<p>helping functions that build the source mask, remove contaminated pixels,
+estimate PRF edges, and create the final PRF model.</p>
+<p>For details see:
+    <code>self._create_sparse()</code>
+    <code>self._get_source_mask()</code>
+    <code>self._get_uncontaminated_source_mask()</code>
+    <code>self._build_prf_shape()</code></p>
+<p>Default parameters where used for Martinez-Palomera et al. 2021.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>n_r_knots</code></td>
+        <td><code>int</code></td>
+        <td><p>Number of radial knots in the spline model.</p></td>
+        <td><code>5</code></td>
+      </tr>
+      <tr>
+        <td><code>n_phi_knots</code></td>
+        <td><code>int</code></td>
+        <td><p>Number of azimuthal knots in the spline model.</p></td>
+        <td><code>15</code></td>
+      </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI.download_ffi" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">download_ffi</span><span class="p">(</span><span class="n">fits_name</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-staticmethod"><code>staticmethod</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Download FFI fits file to a dedicated quarter directory</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>fits_name</code></td>
+        <td><code>string</code></td>
+        <td><p>Name of FFI fits file</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI.fit_model" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">fit_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Function to fit the PRF model and do LFD photometry for the sources observed in</p>
+<p>the FFIs.</p>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI.plot_image" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">plot_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Function to plot the Full Frame Image and the Gaia Sources</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>ax</code></td>
+        <td><code>matplotlib.axes</code></td>
+        <td><p>Matlotlib axis can be provided, if not one will be created and returned</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>sources</code></td>
+        <td><code>boolean</code></td>
+        <td><p>Whether to overplot or not the source catalog</p></td>
+        <td><code>False</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>matplotlib.axes</code></td>
+      <td><p>Matlotlib axis with the figure</p></td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI.plot_pixel_masks" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">plot_pixel_masks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Function to plot the mask used to reject saturated and bright pixels</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>ax</code></td>
+        <td><code>matplotlib.axes</code></td>
+        <td><p>Matlotlib axis can be provided, if not one will be created and returned</p></td>
+        <td><code>None</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>matplotlib.axes</code></td>
+      <td><p>Matlotlib axis with the figure</p></td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI.plot_prf_shape" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">plot_prf_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Function to plot the PRF model in Cartesian and Polar coordinates</p>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.KeplerFFI.KeplerFFI.save_model" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">save_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Function to save the PRF model weights, number of knots for r and phy, and</p>
+<p>rmin and rmax to re-build the Design Matrix.
+The file is a csv table, that contain a multi-index column table. Rows are each
+channel, and columns are:
+    ["n_r_knots", "n_phi_knots", "rmin", "rmax", ...prf_ws...]
+This file can be loaded as:
+    pd.read_csv(fname, index_col=0, header=[0, 1])</p>
+<p>Note: models with different number of knots lead to different number of weights,
+and ins necessary to create separete files to preserve the esctructure.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>path</code></td>
+        <td><code>string</code></td>
+        <td><p>Path of the file</p></td>
+        <td><code>None</code></td>
+      </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        <a href=".." class="md-footer__link md-footer__link--prev" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Home
+            </div>
+          </div>
+        </a>
+      
+      
+        <a href="../KeplerPRF/" class="md-footer__link md-footer__link--next" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              KeplerPRF
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+        
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../assets/javascripts/workers/search.d351de03.min.js", "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a1609d9a.min.js"></script>
+      
+    
+  </body>
+</html>

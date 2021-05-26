@@ -1,0 +1,1616 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.5">
+    
+    
+      
+        <title>EXBAMachine - PSFMachine</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.bde7dde4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ef6f36e2.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    <script>function __prefix(e){return new URL("..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#documentation-for-keplerffi" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="PSFMachine" class="md-header__button md-logo" aria-label="PSFMachine" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PSFMachine
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              EXBAMachine
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        
+<a href="https://github.com/jorgemarpa/kepler-apertures/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="PSFMachine" class="md-nav__button md-logo" aria-label="PSFMachine" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    PSFMachine
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/jorgemarpa/kepler-apertures/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../KeplerFFI/" class="md-nav__link">
+        KeplerFFI
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../KeplerPRF/" class="md-nav__link">
+        KeplerPRF
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          EXBAMachine
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        EXBAMachine
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine" class="md-nav__link">
+    kepler_apertures.EXBAMachine.EXBAMachine
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine._clean_source_list" class="md-nav__link">
+    _clean_source_list()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine._convert_to_wcs" class="md-nav__link">
+    _convert_to_wcs()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine._do_query" class="md-nav__link">
+    _do_query()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine._parse_TPFs_channel" class="md-nav__link">
+    _parse_TPFs_channel()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine._preprocess" class="md-nav__link">
+    _preprocess()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.apply_CBV" class="md-nav__link">
+    apply_CBV()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.create_lcs" class="md-nav__link">
+    create_lcs()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.do_photometry" class="md-nav__link">
+    do_photometry()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.download_exba" class="md-nav__link">
+    download_exba()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.image_to_fits" class="md-nav__link">
+    image_to_fits()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.plot_image" class="md-nav__link">
+    plot_image()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.plot_lightcurve" class="md-nav__link">
+    plot_lightcurve()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.plot_stamp" class="md-nav__link">
+    plot_stamp()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine" class="md-nav__link">
+    kepler_apertures.EXBAMachine.EXBAMachine
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine._clean_source_list" class="md-nav__link">
+    _clean_source_list()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine._convert_to_wcs" class="md-nav__link">
+    _convert_to_wcs()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine._do_query" class="md-nav__link">
+    _do_query()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine._parse_TPFs_channel" class="md-nav__link">
+    _parse_TPFs_channel()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine._preprocess" class="md-nav__link">
+    _preprocess()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.apply_CBV" class="md-nav__link">
+    apply_CBV()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.create_lcs" class="md-nav__link">
+    create_lcs()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.do_photometry" class="md-nav__link">
+    do_photometry()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.download_exba" class="md-nav__link">
+    download_exba()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.image_to_fits" class="md-nav__link">
+    image_to_fits()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.plot_image" class="md-nav__link">
+    plot_image()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.plot_lightcurve" class="md-nav__link">
+    plot_lightcurve()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kepler_apertures.EXBAMachine.EXBAMachine.plot_stamp" class="md-nav__link">
+    plot_stamp()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/jorgemarpa/kepler-apertures/edit/master/docs/EXBAMachine.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="documentation-for-keplerffi">Documentation for <code>KeplerFFI</code></h1>
+
+
+  <div class="doc doc-object doc-class">
+
+<a id="kepler_apertures.EXBAMachine.EXBAMachine"></a>
+    <div class="doc doc-contents first">
+
+      <p>Class that works with Kepler's EXBA data, to identify observed sources using Gaia</p>
+<p>catalogs, and create light curves from simple aperture photometry.</p>
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.EXBAMachine.EXBAMachine.__init__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="mi">53</span><span class="p">,</span> <span class="n">quarter</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">magnitude_limit</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">gaia_dr</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>channel</code></td>
+        <td><code>int</code></td>
+        <td><p>Channel number of the EXBA image.</p></td>
+        <td><code>53</code></td>
+      </tr>
+      <tr>
+        <td><code>quarter</code></td>
+        <td><code>int</code></td>
+        <td><p>Quarter number of the EXBA image.</p></td>
+        <td><code>5</code></td>
+      </tr>
+      <tr>
+        <td><code>magnitude_limit</code></td>
+        <td><code>float</code></td>
+        <td><p>Limiting magnitude in g band used when querying Gaia catalogs,
+default is 20 mag.</p></td>
+        <td><code>20</code></td>
+      </tr>
+      <tr>
+        <td><code>gaia_dr</code></td>
+        <td><code>int</code></td>
+        <td><p>Gaia data release, dafult is EDR3.</p></td>
+        <td><code>3</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Attributes:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>quarter</code></td>
+        <td><code>int</code></td>
+        <td><p>Channel number of the EXBA image.</p></td>
+      </tr>
+      <tr>
+        <td><code>channel</code></td>
+        <td><code>int</code></td>
+        <td><p>Quarter number of the EXBA image.</p></td>
+      </tr>
+      <tr>
+        <td><code>gaia_dr</code></td>
+        <td><code>int</code></td>
+        <td><p>Gaia data release, dafult is EDR3.</p></td>
+      </tr>
+      <tr>
+        <td><code>tpfs</code></td>
+        <td><code>lightkurve.TargetPixelFileCollection</code></td>
+        <td><p>Collection of 4 TPFs that form the full EXBA mask.</p></td>
+      </tr>
+      <tr>
+        <td><code>time</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array containing the time values.</p></td>
+      </tr>
+      <tr>
+        <td><code>cadences</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array containing the cadence numbers.</p></td>
+      </tr>
+      <tr>
+        <td><code>row</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array containing the valid pixel row numbers. Has shape of [n_pixels].</p></td>
+      </tr>
+      <tr>
+        <td><code>column</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array containing the valid pixel columns numbers.
+Has shape of [n_pixels].</p></td>
+      </tr>
+      <tr>
+        <td><code>flux</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array containing the valid image fluxes. Has shape of
+[n_times, n_pixels].</p></td>
+      </tr>
+      <tr>
+        <td><code>flux_err</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array containing the valid image flux errors. Has shape of
+[n_times, n_pixels].</p></td>
+      </tr>
+      <tr>
+        <td><code>ra</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array containing the valid RA pixel values. Has shape of [n_pixels].</p></td>
+      </tr>
+      <tr>
+        <td><code>dec</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array containing the valid Dec pixel values. Has shape of [n_pixels].</p></td>
+      </tr>
+      <tr>
+        <td><code>dx</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Distance between pixel and source coordinates, units of pixels. Has shape
+of [n_sources, n_pixels]</p></td>
+      </tr>
+      <tr>
+        <td><code>dy</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Distance between pixel and source coordinates, units of pixels. Has shape
+of [n_sources, n_pixels]</p></td>
+      </tr>
+      <tr>
+        <td><code>r</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Radial distance between pixel and source coordinates (polar coordinates),
+in units of pixels.</p></td>
+      </tr>
+      <tr>
+        <td><code>phi</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Angle between pixel and source coordinates (polar coordinates),
+in units of radians</p></td>
+      </tr>
+      <tr>
+        <td><code>n_sources</code></td>
+        <td><code>int</code></td>
+        <td><p>Number of sources in Gaia catalog observed in the EXBA mask.</p></td>
+      </tr>
+      <tr>
+        <td><code>n_rows</code></td>
+        <td><code>int</code></td>
+        <td><p>Number rows in the EXBA image.</p></td>
+      </tr>
+      <tr>
+        <td><code>n_columns</code></td>
+        <td><code>int</code></td>
+        <td><p>Number columns in the EXBA image.</p></td>
+      </tr>
+      <tr>
+        <td><code>aperture_mask</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with the source aperture masks. Has shape of
+[n_sources, n_pixels]</p></td>
+      </tr>
+      <tr>
+        <td><code>FLFRCSAP</code></td>
+        <td><code>numpy.array</code></td>
+        <td><p>Data array with the completeness metric for every source computed from
+the photometric aperture.</p></td>
+      </tr>
+      <tr>
+        <td><code>CROWDSAP</code></td>
+        <td><code>numpy.array</code></td>
+        <td><p>Data array with the contamination metric for every source computed from
+the photometric aperture.</p></td>
+      </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.EXBAMachine.EXBAMachine._clean_source_list" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_clean_source_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-private"><code>private</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Function to clean surces from the catalog removing sources outside the image</p>
+<p>coverage (allowing for sources up to 4" outside the mask), and to remove
+blended sources (within 2").</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>sources</code></td>
+        <td><code>pandas.DataFrame</code></td>
+        <td><p>Catalog with sources to be removed</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>ra</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with values of RA for every pixel in the image.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>dec</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with values of Dec for every pixel in the image.</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>pandas.DataFrame</code></td>
+      <td><p>Clean catalog</p></td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.EXBAMachine.EXBAMachine._convert_to_wcs" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_convert_to_wcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tpfs</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-private"><code>private</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Function to convert pixel number to RA and Dec values using the WCS solution</p>
+<p>embedded in the TPFs.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>tpfs</code></td>
+        <td><code>list of TPFs or TargetPixelFileCollection</code></td>
+        <td><p>A list of TPFs that contain the EXBA tiles.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>row</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data aray with the row pixel values to be converted to RA &amp; Dec.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>col</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data aray with the column pixel values to be converted to RA &amp; Dec.</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>numpy.ndarray</code></td>
+      <td><p>Right Ascension coordinate obtained from the WCS solution.</p></td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.EXBAMachine.EXBAMachine._do_query" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_do_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mi">2020</span><span class="p">,</span> <span class="n">magnitude_limit</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-private"><code>private</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Calculate ra, dec coordinates and search radius to query Gaia catalog.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>ra</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Right ascension coordinate of pixels to do Gaia search</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>dec</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Declination coordinate of pixels to do Gaia search</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>epoch</code></td>
+        <td><code>float</code></td>
+        <td><p>Epoch of obervation in Julian Days of ra, dec coordinates,
+will be used to propagate proper motions in Gaia.</p></td>
+        <td><code>2020</code></td>
+      </tr>
+      <tr>
+        <td><code>magnitude_limit</code></td>
+        <td><code>int</code></td>
+        <td><p>Limiting magnitued for query</p></td>
+        <td><code>20</code></td>
+      </tr>
+      <tr>
+        <td><code>load</code></td>
+        <td><code>boolean</code></td>
+        <td><p>Load or not the saved query. Set to False if want to force to run new
+queries.</p></td>
+        <td><code>True</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>pandas.DataFrame</code></td>
+      <td><p>Catalog with query result</p></td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.EXBAMachine.EXBAMachine._parse_TPFs_channel" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_parse_TPFs_channel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tpfs</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-private"><code>private</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Function to parse the TPFs containing the EXBA masks (4 per channel) and</p>
+<p>tile them.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>tpfs</code></td>
+        <td><code>list of TPFs or TargetPixelFileCollection</code></td>
+        <td><p>A list of TPFs that contain the 4 EXBA mask per channel.</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>numpy.ndarray</code></td>
+      <td><p>Data array containing the time values.</p></td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.EXBAMachine.EXBAMachine._preprocess" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">_preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">cadences</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="n">flux_err</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-private"><code>private</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Function to clean pixels with nan values and bad cadences. It Returns the same</p>
+<p>input arrays but cleaned.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>times</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with the time values.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>cadences</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with the cadence numbers.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>flux</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with the image flux.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>flux_err</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Data array with the image flux errors.</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>numpy.ndarray</code></td>
+      <td><p>Data array with the time values.</p></td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.EXBAMachine.EXBAMachine.apply_CBV" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">apply_CBV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">do_under</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Applies CBV corrections to all the light curves in <code>self.lcs</code>. It optimizes</p>
+<p>the alpha parameter for each correction, if optimization fails, uses the alpha
+value calculated for previous light curve.
+It creates class attributes to access the CBV-corrected light curves, and
+under/over fitting metrics.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>do_under</code></td>
+        <td><code>boolean</code></td>
+        <td><p>Compute or not the under-fitting metric for the CBV correction.</p></td>
+        <td><code>False</code></td>
+      </tr>
+      <tr>
+        <td><code>plot</code></td>
+        <td><code>boolean</code></td>
+        <td><p>Plot or not CBVcorrector diagnostic figures.</p></td>
+        <td><code>True</code></td>
+      </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.EXBAMachine.EXBAMachine.create_lcs" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">create_lcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">aperture_mask</span><span class="p">)</span></code>
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Funciton to create <code>lightkurve.LightCurve</code> with the light curves using aperture</p>
+<p>photometry. It creates a class attribute <code>self.lcs</code> that is a
+<code>lk.LightCurveCollection</code> with the light curves of all input sources.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>aperture_mask</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Boolean mask of shape [n_sources, n_pixels] that has the aperture mask
+to be used to compute photometry for a set of sources.</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.EXBAMachine.EXBAMachine.do_photometry" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">do_photometry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">aperture_mask</span><span class="p">)</span></code>
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Function to do aperture photometry on a set of sources. It creates/update class</p>
+<p>attributes that contains the SAP flux, errors, and aperture masks.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>aperture_mask</code></td>
+        <td><code>numpy.ndarray</code></td>
+        <td><p>Boolean mask of shape [n_sources, n_pixels] that has the aperture mask
+to be used to compute photometry for a set of sources.</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.EXBAMachine.EXBAMachine.download_exba" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">download_exba</span><span class="p">(</span><span class="n">channel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">quarter</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-staticmethod"><code>staticmethod</code></small>
+  </span>
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Download EXBA fits file to a dedicated quarter/channel directory</p>
+<p>It uses a exba_tpfs_info.csv to map the quarter/channel to the corresponding
+file names in MAST archive.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>channel</code></td>
+        <td><code>int</code></td>
+        <td><p>Number of channel to be download, valid numbers are bwtween 1 and 84.</p></td>
+        <td><code>1</code></td>
+      </tr>
+      <tr>
+        <td><code>quarter</code></td>
+        <td><code>int</code></td>
+        <td><p>Number of quarter to be download, valid numbers are bwtween 1 and 17.</p></td>
+        <td><code>5</code></td>
+      </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.EXBAMachine.EXBAMachine.image_to_fits" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">image_to_fits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Creates a FITS file that contains the time-average imagege of the EXBA mask</p>
+<p>in a ImageHDU, and the source catalog in a BinTableHDU.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>path</code></td>
+        <td><code>string</code></td>
+        <td><p>Directory path where to save the FITS file.</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>overwrite</code></td>
+        <td><code>bool</code></td>
+        <td><p>Overwrite the output file.</p></td>
+        <td><code>False</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>ImageHDU</code></td>
+      <td><p>An Image header unit containing the EXBA flux.</p></td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.EXBAMachine.EXBAMachine.plot_image" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">plot_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Function to plot the full EXBA image and the Gaia Sources.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>frame</code></td>
+        <td><code>int</code></td>
+        <td><p>Frame number. The default is 0, i.e. the first frame.</p></td>
+        <td><code>0</code></td>
+      </tr>
+      <tr>
+        <td><code>sources</code></td>
+        <td><code>boolean</code></td>
+        <td><p>Whether to overplot or not the source catalog</p></td>
+        <td><code>True</code></td>
+      </tr>
+      <tr>
+        <td><code>ax</code></td>
+        <td><code>matplotlib.axes</code></td>
+        <td><p>Matlotlib axis can be provided, if not one will be created and returned</p></td>
+        <td><code>None</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>matplotlib.axes</code></td>
+      <td><p>Matlotlib axis with the figure</p></td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.EXBAMachine.EXBAMachine.plot_lightcurve" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">plot_lightcurve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Creates a figure with the light curve of a given source.</p>
+<p>mask.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>source_idx</code></td>
+        <td><code>int</code></td>
+        <td><p>Index of the source in <code>self.sources</code> catalog to be plotted.</p></td>
+        <td><code>0</code></td>
+      </tr>
+      <tr>
+        <td><code>ax</code></td>
+        <td><code>matplotlib.axes</code></td>
+        <td><p>Matlotlib axis can be provided, if not one will be created and returned.</p></td>
+        <td><code>None</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>matplotlib.axes</code></td>
+      <td><p>Matlotlib axis with the figure</p></td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="kepler_apertures.EXBAMachine.EXBAMachine.plot_stamp" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">plot_stamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">aperture_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Creates a figure with the "stamp" image of a given source and its aperture</p>
+<p>mask.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>source_idx</code></td>
+        <td><code>int</code></td>
+        <td><p>Index of the source in <code>self.sources</code> catalog to be plotted.</p></td>
+        <td><code>0</code></td>
+      </tr>
+      <tr>
+        <td><code>aperture_mask</code></td>
+        <td><code>boolean</code></td>
+        <td><p>Plot or not the aperutre mask.</p></td>
+        <td><code>False</code></td>
+      </tr>
+      <tr>
+        <td><code>ax</code></td>
+        <td><code>matplotlib.axes</code></td>
+        <td><p>Matlotlib axis can be provided, if not one will be created and returned.</p></td>
+        <td><code>None</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>matplotlib.axes</code></td>
+      <td><p>Matlotlib axis with the figure</p></td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        <a href="../KeplerPRF/" class="md-footer__link md-footer__link--prev" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              KeplerPRF
+            </div>
+          </div>
+        </a>
+      
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+        
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../assets/javascripts/workers/search.d351de03.min.js", "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a1609d9a.min.js"></script>
+      
+    
+  </body>
+</html>
