@@ -402,9 +402,9 @@ class KeplerFFI(object):
             sources = sources.loc[:, columns]
 
             if not os.path.isdir(
-                "%s/data/catalogs/ffi/%i" % (DATAOUTDIR, self.quarter)
+                "%s/data/catalogs/ffi/%s" % (DATAOUTDIR, str(self.quarter))
             ):
-                os.makedirs("%s/data/catalogs/ffi/%i" % (DATAOUTDIR, self.quarter))
+                os.makedirs("%s/data/catalogs/ffi/%s" % (DATAOUTDIR, str(self.quarter)))
             sources.to_csv(file_name)
         return sources
 
@@ -1183,8 +1183,10 @@ class KeplerFFI(object):
                 str(self.quarter),
                 self.channel,
             )
-            if not os.path.isdir("%s/data/figures/%i" % (DATAOUTDIR, self.quarter)):
-                os.makedirs("%s/data/figures/%i" % (DATAOUTDIR, self.quarter))
+            if not os.path.isdir(
+                "%s/data/figures/%s" % (DATAOUTDIR, str(self.quarter))
+            ):
+                os.makedirs("%s/data/figures/%s" % (DATAOUTDIR, str(self.quarter)))
             plt.savefig(fig_name, format="png", bbox_inches="tight")
             plt.close()
         else:
@@ -1291,8 +1293,10 @@ class KeplerFFI(object):
                 str(self.quarter),
                 self.channel,
             )
-            if not os.path.isdir("%s/data/figures/%i" % (DATAOUTDIR, self.quarter)):
-                os.makedirs("%s/data/figures/%i" % (DATAOUTDIR, self.quarter))
+            if not os.path.isdir(
+                "%s/data/figures/%s" % (DATAOUTDIR, str(self.quarter))
+            ):
+                os.makedirs("%s/data/figures/%s" % (DATAOUTDIR, str(self.quarter)))
             plt.savefig(fig_name, format="png", bbox_inches="tight")
 
         return ax
@@ -1339,8 +1343,10 @@ class KeplerFFI(object):
                 str(self.quarter),
                 self.channel,
             )
-            if not os.path.isdir("%s/data/figures/%i" % (DATAOUTDIR, self.quarter)):
-                os.makedirs("%s/data/figures/%i" % (DATAOUTDIR, self.quarter))
+            if not os.path.isdir(
+                "%s/data/figures/%s" % (DATAOUTDIR, str(self.quarter))
+            ):
+                os.makedirs("%s/data/figures/%s" % (DATAOUTDIR, str(self.quarter)))
             plt.savefig(fig_name, format="png", bbox_inches="tight")
 
         return ax
