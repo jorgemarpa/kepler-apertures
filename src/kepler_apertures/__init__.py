@@ -3,7 +3,7 @@ import os
 import logging
 
 PACKAGEDIR = os.path.abspath(os.path.dirname(__file__))
-DATAOUTDIR = "/".join(os.path.dirname(os.getcwd()).split("/")[:-1])
+DATAOUTDIR = "/".join(PACKAGEDIR.split("/")[:-2])
 
 from .KeplerFFI import KeplerFFI
 from .KeplerPRF import KeplerPRF
