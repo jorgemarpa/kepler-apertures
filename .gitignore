@@ -9,5 +9,9 @@ docs/*.txt
 docs/*.png
 docs/*.fits
 docs/*.csv
+docs/tutorials
 kepler_apertures/*.lprof
 tutorials/.*
+dist
+site
+src
