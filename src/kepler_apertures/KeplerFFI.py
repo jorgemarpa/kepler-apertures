@@ -767,7 +767,7 @@ class KeplerFFI(object):
                 ylabel=("Radius from Source [pix]"),
                 xlabel=("log$_{10}$ Source Flux"),
             )
-            if self.save:
+            if not self.show:
                 fig_name = "%s/data/figures/%s/channel_%02i_psf_edge_model_%s.png" % (
                     DATAOUTDIR,
                     str(self.quarter),
@@ -1177,7 +1177,7 @@ class KeplerFFI(object):
         fig.colorbar(cax, ax=ax[1, 1])
         ax[1, 1].set_xlabel("dx")
 
-        if self.save:
+        if not self.show:
             fig_name = "%s/data/figures/%s/channel_%02i_psf_model.png" % (
                 DATAOUTDIR,
                 str(self.quarter),
