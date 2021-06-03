@@ -839,15 +839,26 @@ class KeplerFFI(object):
         r_b = self.uncontaminated_source_mask.multiply(self.r).data
 
         # build a design matrix A with b-splines basis in radius and angle axis.
-        A = _make_A_polar(
-            phi_b.ravel(),
-            r_b.ravel(),
-            cut_r=cut_r,
-            rmin=self.rmin,
-            rmax=self.rmax,
-            n_r_knots=self.n_r_knots,
-            n_phi_knots=self.n_phi_knots,
-        )
+        try:
+            A = _make_A_polar(
+                phi_b.ravel(),
+                r_b.ravel(),
+                cut_r=cut_r,
+                rmin=self.rmin,
+                rmax=self.rmax,
+                n_r_knots=self.n_r_knots,
+                n_phi_knots=self.n_phi_knots,
+            )
+        except ValueError:
+            A = _make_A_polar(
+                phi_b.ravel(),
+                r_b.ravel(),
+                cut_r=cut_r,
+                rmin=self.rmin,
+                rmax=np.percentile(r_b.ravel(), 98),
+                n_r_knots=self.n_r_knots,
+                n_phi_knots=self.n_phi_knots,
+            )
         prior_sigma = np.ones(A.shape[1]) * 100
         prior_mu = np.zeros(A.shape[1]) - 10
         nan_mask = np.isfinite(mean_f.ravel())
@@ -941,14 +952,26 @@ class KeplerFFI(object):
         """
         Convenience function to make the scene PRF model
         """
-        Ap = _make_A_polar(
-            self.uncontaminated_source_mask.multiply(self.phi).data,
-            self.uncontaminated_source_mask.multiply(self.r).data,
-            rmin=self.rmin,
-            rmax=self.rmax,
-            n_r_knots=self.n_r_knots,
-            n_phi_knots=self.n_phi_knots,
-        )
+        try:
+            Ap = _make_A_polar(
+                self.uncontaminated_source_mask.multiply(self.phi).data,
+                self.uncontaminated_source_mask.multiply(self.r).data,
+                rmin=self.rmin,
+                rmax=self.rmax,
+                n_r_knots=self.n_r_knots,
+                n_phi_knots=self.n_phi_knots,
+            )
+        except ValueError:
+            Ap = _make_A_polar(
+                self.uncontaminated_source_mask.multiply(self.phi).data,
+                self.uncontaminated_source_mask.multiply(self.r).data,
+                rmin=self.rmin,
+                rmax=np.percentile(
+                    self.uncontaminated_source_mask.multiply(self.r).data, 95
+                ),
+                n_r_knots=self.n_r_knots,
+                n_phi_knots=self.n_phi_knots,
+            )
 
         # And create a `mean_model` that has the psf model for all pixels with fluxes
         mean_model = sparse.csr_matrix(self.r.shape)
