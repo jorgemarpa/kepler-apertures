@@ -3,7 +3,7 @@
 /data
 /dist
 site/
-kepler_apertures
+/kepler_apertures
 
 src/kepler_apertures/__pycache__/
 src/kepler_apertures/*.lprof
