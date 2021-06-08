@@ -244,7 +244,7 @@ def solve_linear_model(
     return w
 
 
-def _make_A_polar(phi, r, cut_r=6, rmin=1, rmax=5, n_r_knots=12, n_phi_knots=15):
+def _make_A_polar(phi, r, cut_r=1.5, rmin=1, rmax=5, n_r_knots=12, n_phi_knots=15):
     """
     Makes a spline design matrix in polar coordinates
     Parameters
