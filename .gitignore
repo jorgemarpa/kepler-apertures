@@ -14,6 +14,7 @@ docs/.jupyter_symlinks
 docs/*.txt
 docs/*.fits
 docs/*.csv
+docs/tutorials/*.csv
 
 docs/tutorials/.virtual_documents
 docs/tutorials/.ipynb_checkpoints
