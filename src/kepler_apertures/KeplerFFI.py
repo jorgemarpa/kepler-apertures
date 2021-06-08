@@ -800,7 +800,7 @@ class KeplerFFI(object):
         self.uncontaminated_source_mask.eliminate_zeros()
 
     # @profile
-    def _build_prf_shape(self, n_r_knots=10, n_phi_knots=12, cut_r=6, flux_cut_off=1):
+    def _build_prf_shape(self, n_r_knots=10, n_phi_knots=12, cut_r=1.5, flux_cut_off=1):
         """
         Builds a sparse model matrix of shape nsources x npixels to be used when
         fitting each source pixels to estimate its PSF photometry
@@ -821,6 +821,7 @@ class KeplerFFI(object):
         flux_estimates = self.gf
         self.n_r_knots = n_r_knots
         self.n_phi_knots = n_phi_knots
+        self.cut_r = cut_r
 
         # mean flux values using uncontaminated mask and normalized by flux estimations
         mean_f = np.log10(
@@ -843,7 +844,7 @@ class KeplerFFI(object):
             A = _make_A_polar(
                 phi_b.ravel(),
                 r_b.ravel(),
-                cut_r=cut_r,
+                cut_r=self.cut_r,
                 rmin=self.rmin,
                 rmax=self.rmax,
                 n_r_knots=self.n_r_knots,
@@ -853,7 +854,7 @@ class KeplerFFI(object):
             A = _make_A_polar(
                 phi_b.ravel(),
                 r_b.ravel(),
-                cut_r=cut_r,
+                cut_r=self.cut_r,
                 rmin=self.rmin,
                 rmax=np.percentile(r_b.ravel(), 98),
                 n_r_knots=self.n_r_knots,
@@ -958,6 +959,7 @@ class KeplerFFI(object):
                 self.uncontaminated_source_mask.multiply(self.r).data,
                 rmin=self.rmin,
                 rmax=self.rmax,
+                cut_r=self.cut_r,
                 n_r_knots=self.n_r_knots,
                 n_phi_knots=self.n_phi_knots,
             )
@@ -969,6 +971,7 @@ class KeplerFFI(object):
                 rmax=np.percentile(
                     self.uncontaminated_source_mask.multiply(self.r).data, 95
                 ),
+                cut_r=self.cut_r,
                 n_r_knots=self.n_r_knots,
                 n_phi_knots=self.n_phi_knots,
             )
@@ -1041,7 +1044,7 @@ class KeplerFFI(object):
             fname = path
 
         arr_to_save = np.array(
-            [self.n_r_knots, self.n_phi_knots, self.rmin, self.rmax]
+            [self.n_r_knots, self.n_phi_knots, self.rmin, self.rmax, self.cut_r]
             + self.psf_w.tolist()
         )
 
@@ -1050,7 +1053,7 @@ class KeplerFFI(object):
                 self.quarter: pd.DataFrame(
                     np.atleast_2d(arr_to_save),
                     index=[self.channel],
-                    columns=["n_r_knots", "n_phi_knots", "rmin", "rmax"]
+                    columns=["n_r_knots", "n_phi_knots", "rmin", "rmax", "cut_r"]
                     + ["w%02i" % i for i in range(1, 1 + len(self.psf_w))],
                 )
             }
@@ -1079,7 +1082,7 @@ class KeplerFFI(object):
                     self.quarter: pd.DataFrame(
                         np.atleast_2d(arr_to_save),
                         index=[self.channel],
-                        columns=["n_r_knots", "n_phi_knots", "rmin", "rmax"]
+                        columns=["n_r_knots", "n_phi_knots", "rmin", "rmax", "cut_r"]
                         + ["b%02i" % i for i in range(1, 1 + len(self.psf_w))],
                     )
                 }
