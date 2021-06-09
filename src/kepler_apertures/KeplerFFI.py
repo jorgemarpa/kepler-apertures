@@ -1044,7 +1044,7 @@ class KeplerFFI(object):
             fname = path
 
         arr_to_save = np.array(
-            [self.n_r_knots, self.n_phi_knots, self.rmin, self.rmax, self.cut_r]
+            [self.n_r_knots, self.n_phi_knots, self.rmin, self.rmax]
             + self.psf_w.tolist()
         )
 
@@ -1053,7 +1053,7 @@ class KeplerFFI(object):
                 self.quarter: pd.DataFrame(
                     np.atleast_2d(arr_to_save),
                     index=[self.channel],
-                    columns=["n_r_knots", "n_phi_knots", "rmin", "rmax", "cut_r"]
+                    columns=["n_r_knots", "n_phi_knots", "rmin", "rmax"]
                     + ["w%02i" % i for i in range(1, 1 + len(self.psf_w))],
                 )
             }
@@ -1082,7 +1082,7 @@ class KeplerFFI(object):
                     self.quarter: pd.DataFrame(
                         np.atleast_2d(arr_to_save),
                         index=[self.channel],
-                        columns=["n_r_knots", "n_phi_knots", "rmin", "rmax", "cut_r"]
+                        columns=["n_r_knots", "n_phi_knots", "rmin", "rmax"]
                         + ["b%02i" % i for i in range(1, 1 + len(self.psf_w))],
                     )
                 }
