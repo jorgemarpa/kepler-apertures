@@ -19,3 +19,5 @@ docs/tutorials/*.csv
 docs/tutorials/.virtual_documents
 docs/tutorials/.ipynb_checkpoints
 docs/tutorials/.jupyter_symlinks
+
+/sandbox
