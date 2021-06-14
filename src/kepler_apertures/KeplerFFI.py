@@ -889,9 +889,7 @@ class KeplerFFI(object):
 
         X = self.mean_model.copy().T
 
-        fmean = (
-            self.uncontaminated_source_mask.astype(float).multiply(self.dflux_err).data
-        )
+        fmean = self.uncontaminated_source_mask.astype(float).multiply(self.dflux).data
         femean = (
             self.uncontaminated_source_mask.astype(float).multiply(self.dflux_err).data
         )
