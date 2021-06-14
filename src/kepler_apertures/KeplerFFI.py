@@ -860,6 +860,7 @@ class KeplerFFI(object):
                 n_r_knots=self.n_r_knots,
                 n_phi_knots=self.n_phi_knots,
             )
+            self.rmax = np.percentile(r_b.ravel(), 98)
         prior_sigma = np.ones(A.shape[1]) * 100
         prior_mu = np.zeros(A.shape[1]) - 10
         nan_mask = np.isfinite(mean_f.ravel())
@@ -920,13 +921,11 @@ class KeplerFFI(object):
         self._get_uncontaminated_source_mask()
 
         # set new rmax for spline basis
-        self.rmax = np.percentile(
-            self.uncontaminated_source_mask.multiply(self.r).data, 99.9
+        self.rmax = np.minimum(
+            self.rmax,
+            np.percentile(self.uncontaminated_source_mask.multiply(self.r).data, 99.9),
         )
-
         self._get_mean_model()
-
-        self.psf_w2 = ws
 
         self.mean_flux = np.log10(
             self.uncontaminated_source_mask.astype(float)
@@ -951,28 +950,15 @@ class KeplerFFI(object):
         """
         Convenience function to make the scene PRF model
         """
-        try:
-            Ap = _make_A_polar(
-                self.uncontaminated_source_mask.multiply(self.phi).data,
-                self.uncontaminated_source_mask.multiply(self.r).data,
-                rmin=self.rmin,
-                rmax=self.rmax,
-                cut_r=self.cut_r,
-                n_r_knots=self.n_r_knots,
-                n_phi_knots=self.n_phi_knots,
-            )
-        except ValueError:
-            Ap = _make_A_polar(
-                self.uncontaminated_source_mask.multiply(self.phi).data,
-                self.uncontaminated_source_mask.multiply(self.r).data,
-                rmin=self.rmin,
-                rmax=np.percentile(
-                    self.uncontaminated_source_mask.multiply(self.r).data, 95
-                ),
-                cut_r=self.cut_r,
-                n_r_knots=self.n_r_knots,
-                n_phi_knots=self.n_phi_knots,
-            )
+        Ap = _make_A_polar(
+            self.uncontaminated_source_mask.multiply(self.phi).data,
+            self.uncontaminated_source_mask.multiply(self.r).data,
+            rmin=self.rmin,
+            rmax=self.rmax,
+            cut_r=self.cut_r,
+            n_r_knots=self.n_r_knots,
+            n_phi_knots=self.n_phi_knots,
+        )
 
         # And create a `mean_model` that has the psf model for all pixels with fluxes
         mean_model = sparse.csr_matrix(self.r.shape)
