@@ -9,6 +9,8 @@ Paper coming soon!
 Tools to create aperture mask for Kepler sources using PRF models build from Kepler's
 Full Frame Images.
 
+Inspired by [`psfmachine`](https://github.com/SSDataLab/psfmachine).
+
 # Instalation
 
 ```
