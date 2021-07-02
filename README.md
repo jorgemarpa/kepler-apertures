@@ -32,7 +32,7 @@ Here an example of the full EXBA mask observed in quarter 5 with channel 48
 
 # Light Curve examples
 
-Light curve examples created with `kepler-apertures` for sources detected in the EXBA masks.
+Light curve examples created with `kepler-apertures` for sources detected in the EXBA masks. These are 4 Eclipsing Binaries observed by Kepler.
 
 ![EBs](https://github.com/jorgemarpa/kepler-apertures/blob/main/docs/ebs.png)
 
