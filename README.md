@@ -1,5 +1,8 @@
 # Kepler Apertures
 
+[![DOI](https://zenodo.org/badge/345841081.svg)](https://zenodo.org/badge/latestdoi/345841081)
+
+
 Take me to the [documentation](https://jorgemarpa.github.io/kepler-apertures/).
 Paper coming soon!
 
