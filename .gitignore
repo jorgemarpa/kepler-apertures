@@ -15,3 +15,5 @@ tutorials/.*
 dist
 site
 src
+sandbox/.ipynb_checkpoints
+sandbox/.virtual_documents
