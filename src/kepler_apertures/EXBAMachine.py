@@ -780,6 +780,7 @@ class EXBAMachine(object):
             shading="auto",
             cmap="viridis",
             norm=colors.SymLogNorm(linthresh=100, vmin=0, vmax=1000, base=10),
+            rasterized=True,
         )
         if sources:
             ax.scatter(
@@ -792,10 +793,10 @@ class EXBAMachine(object):
                 linewidth=1.5,
                 label="Gaia Sources",
             )
-        ax.set_xlabel("R.A. [hh:mm:ss]", fontsize=12)
-        ax.set_ylabel("Dec [deg]", fontsize=12)
-        cbar = fig.colorbar(pc)
-        cbar.set_label(label=r"Flux ($e^{-}s^{-1}$)", size=12)
+        ax.set_xlabel("R.A. [hh:mm:ss]", fontsize=14)
+        ax.set_ylabel("Dec [deg]", fontsize=14)
+        cbar = fig.colorbar(pc, fraction=0.1, pad=0.04)
+        cbar.set_label(label=r"Flux ($e^{-}s^{-1}$)", size=14)
         ax.set_aspect("equal", adjustable="box")
 
         return ax
